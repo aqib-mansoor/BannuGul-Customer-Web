@@ -1,0 +1,16 @@
+/* Hide scrollbar globally */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Hide scrollbar for all browsers */
+html, body {
+  overflow-x: hidden;  /* stop horizontal scrollbar */
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
+}
