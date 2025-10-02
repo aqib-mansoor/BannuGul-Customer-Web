@@ -7,7 +7,7 @@ import {
   Minus,
   Trash2,
   Percent,
-  Edit, 
+  Edit,
   CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,24 +15,26 @@ import api from "../api/axios";
 import { useCart } from "../context/CartContext";
 import { SettingsContext } from "../context/SettingsContext";
 import deliveryBoyIcon from "../assets/delivery-boy.png";
-import { motion,AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AddressContext } from "../context/AddressContext";
-import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"; // ✅ correct icons
+import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import ExistingAddresses from "./Addresses/ExistingAddresses";
 import AddAddressModal from "./Addresses/AddAddressModal";
 import "../styles/scrollbar.css";
 import Lottie from "lottie-react";
-import checkedDone from "../assets/lottie/checked-done.json"; // correct relative path
+import { GET, POST, DELETE } from "../api/httpMethods";
+import URLS from "../api/urls";
+import checkedDone from "../assets/lottie/checked-done.json"; 
 
 
 export default function FloatingCart() {
   const { cartItems, setCartItems } = useCart();
   const { settings } = useContext(SettingsContext);
-  const { selectedAddress, setSelectedAddress } = useContext(AddressContext); // ✅ use context directly
+  const { selectedAddress, setSelectedAddress } = useContext(AddressContext); 
   const navigate = useNavigate();
-  const [showSummary, setShowSummary] = useState(false); // ✅ define state
+  const [showSummary, setShowSummary] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState("");
-  const [modalType, setModalType] = useState(null); // "add" or "existing"
+  const [modalType, setModalType] = useState(null); 
 
   const [isOpen, setIsOpen] = useState(false);
   const [voucher, setVoucher] = useState("");
@@ -40,7 +42,7 @@ export default function FloatingCart() {
   const [savedAddresses, setSavedAddresses] = useState([]);
 
   const DELIVERY_CHARGE = Number(settings?.delivery_charges || 0);
-//const TAX_PERCENTAGE = Number(settings?.tax_percentage || 0);
+  //const TAX_PERCENTAGE = Number(settings?.tax_percentage || 0);
   const CURRENCY = settings?.currency || "Rs";
   const ESTIMATED_TIME = settings?.max_delivery_time || "30-40 min";
 
@@ -53,8 +55,8 @@ export default function FloatingCart() {
   const setActiveAddressAPI = async (address) => {
     try {
       const headers = getAuthHeaders();
-      await api.post("/api/setActiveAddress", { id: address.id }, { headers });
-      setSelectedAddress(address); // ✅ update context
+      await POST(URLS.SET_ACTIVE_ADDRESS, { id: address.id }, { headers });
+      setSelectedAddress(address);
       localStorage.setItem("activeAddress", JSON.stringify(address));
     } catch (err) {
       console.error("Error setting active address:", err.response?.data || err.message);
@@ -69,7 +71,7 @@ export default function FloatingCart() {
     const fetchCart = async () => {
       try {
         const headers = getAuthHeaders();
-        const res = await api.get("/api/showCartProducts", { headers });
+        const res = await GET(URLS.SHOW_CART_PRODUCTS, { headers });
         if (!res.data.error) setCartItems(res.data.records || []);
       } catch (err) { console.error(err); }
     };
@@ -77,7 +79,7 @@ export default function FloatingCart() {
     const fetchAddresses = async () => {
       try {
         const headers = getAuthHeaders();
-        const res = await api.get("/api/showAddresses", { headers });
+        const res = await GET(URLS.SHOW_ADDRESSES, { headers });
         if (!res.data.error) {
           setSavedAddresses(res.data.records || []);
           if (!selectedAddress && res.data.records.length > 0) {
@@ -97,76 +99,101 @@ export default function FloatingCart() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
   const discount = voucher ? 50 : 0;
   //const taxAmount = ((subtotal - discount + DELIVERY_CHARGE) * TAX_PERCENTAGE) / 100;
-  const total = subtotal + DELIVERY_CHARGE - discount ;
+  const total = subtotal + DELIVERY_CHARGE - discount;
 
-  const handleAdd = async (item) => {
-    try {
-      const headers = getAuthHeaders();
-      await api.post("/api/updateCartItemQuantity", { product_id: item.product_id, quantity: item.quantity + 1 }, { headers });
-      setCartItems(cartItems.map(i => i.product_id === item.product_id ? { ...i, quantity: i.quantity + 1 } : i));
-    } catch (err) { console.error(err); }
+  const handleAdd = (item) => {
+    setCartItems(prev =>
+      prev.map(i =>
+        i.product_id === item.product_id ? { ...i, quantity: i.quantity + 1 } : i
+      )
+    );
+
+    const headers = getAuthHeaders();
+    POST(URLS.UPDATE_CART_ITEM, { product_id: item.product_id, quantity: item.quantity + 1 }, { headers })
+      .catch(err => {
+        console.error("Error updating quantity:", err);
+        setCartItems(prev =>
+          prev.map(i =>
+            i.product_id === item.product_id ? { ...i, quantity: item.quantity } : i
+          )
+        );
+      });
   };
 
-  const handleRemove = async (item) => {
-    try {
-      const headers = getAuthHeaders();
-      const newQty = item.quantity - 1;
-      if (newQty > 0) {
-        await api.post("/api/updateCartItemQuantity", { product_id: item.product_id, quantity: newQty }, { headers });
-        setCartItems(cartItems.map(i => i.product_id === item.product_id ? { ...i, quantity: newQty } : i));
-      } else handleRemoveItem(item.product_id);
-    } catch (err) { console.error(err); }
+  const handleRemove = (item) => {
+    const newQty = item.quantity - 1;
+    if (newQty <= 0) return handleRemoveItem(item.product_id);
+
+    setCartItems(prev =>
+      prev.map(i =>
+        i.product_id === item.product_id ? { ...i, quantity: newQty } : i
+      )
+    );
+
+    const headers = getAuthHeaders();
+    POST(URLS.UPDATE_CART_ITEM, { product_id: item.product_id, quantity: newQty }, { headers })
+      .catch(err => {
+        console.error("Error updating quantity:", err);
+        setCartItems(prev =>
+          prev.map(i =>
+            i.product_id === item.product_id ? { ...i, quantity: item.quantity } : i
+          )
+        );
+      });
   };
 
   const handleRemoveItem = async (productId) => {
     try {
       const headers = getAuthHeaders();
-      await api.delete("/api/removeToCart", { headers, data: { product_id: productId } });
+      await DELETE(URLS.REMOVE_TO_CART, { data: { product_id: productId }, headers });
       setCartItems(cartItems.filter(i => i.product_id !== productId));
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error("Error removing item from cart:", err.response?.data || err.message);
+    }
   };
+
 
   const handleEmptyCart = async () => {
     try {
       const headers = getAuthHeaders();
-      await api.delete("/api/emptyCart", { headers });
+      await DELETE(URLS.EMPTY_CART, { headers });
       setCartItems([]);
     } catch (err) { console.error(err); }
   };
 
   // ✅ Place Order API
   const handlePlaceOrder = async () => {
-  try {
-    const headers = getAuthHeaders();
-    const loggedInUser = JSON.parse(localStorage.getItem("user")); // ✅ get user
+    try {
+      const headers = getAuthHeaders();
+      const loggedInUser = JSON.parse(localStorage.getItem("user")); // ✅ get user
 
-    const restaurantId = cartItems[0]?.product?.restaurant_id;
-    if (!restaurantId || !selectedAddress?.id) {
-      alert("Missing restaurant or address");
-      return;
+      const restaurantId = cartItems[0]?.product?.restaurant_id;
+      if (!restaurantId || !selectedAddress?.id) {
+        alert("Missing restaurant or address");
+        return;
+      }
+
+      const payload = {
+        restaurant_id: restaurantId,
+        address_id: selectedAddress.id,
+        name: loggedInUser?.name || "",          // customer name
+        mobile_number: loggedInUser?.phone || "", // customer phone
+        address: selectedAddress.address || "",
+        gps_address: selectedAddress.gps_address || "",
+        location: selectedAddress.location || "",
+        payment_method: "cash",
+        special_instructions: specialInstructions || "",
+      };
+
+      const res = await POST(URLS.ADD_ORDER, payload, { headers });
+      if (res.data) {
+        setStep(3); // success step
+        await handleEmptyCart();
+      }
+    } catch (err) {
+      console.error("Error placing order:", err.response?.data || err.message);
     }
-
-    const payload = {
-      restaurant_id: restaurantId,
-      address_id: selectedAddress.id,
-      name: loggedInUser?.name || "",          // customer name
-      mobile_number: loggedInUser?.phone || "", // customer phone
-      address: selectedAddress.address || "",
-      gps_address: selectedAddress.gps_address || "",
-      location: selectedAddress.location || "",
-      payment_method: "cash",
-      special_instructions: specialInstructions || "",
-    };
-
-    const res = await api.post("/api/addOrder", payload, { headers });
-    if (res.data) {
-      setStep(3); // success step
-      await handleEmptyCart();
-    }
-  } catch (err) {
-    console.error("Error placing order:", err.response?.data || err.message);
-  }
-};
+  };
 
   const TotalsSummary = () => (
     <div className="border-t pt-3 space-y-2">
@@ -194,11 +221,11 @@ export default function FloatingCart() {
       </button>
 
       {/* Side Drawer */}
-<div className={`fixed top-0 right-0 h-full w-80 sm:w-96 bg-white shadow-xl 
+      <div className={`fixed top-0 right-0 h-full w-80 sm:w-96 bg-white shadow-xl 
   transform transition-transform duration-300 z-[9999] flex flex-col 
   ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
         {/* Header */}
-  <div className="flex flex-col gap-2 p-4 border-b bg-gray-50">
+        <div className="flex flex-col gap-2 p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800">
               <ShoppingCart size={18} className="text-green-600" /> {step === 1 ? "Cart" : step === 2 ? "Checkout" : "Success"}
@@ -223,8 +250,8 @@ export default function FloatingCart() {
         </div>
 
         {/* Content */}
-<div className="flex-1 overflow-y-auto scrollbar-hidden p-4">
-            {/* Step 1: Cart Items */}
+        <div className="flex-1 overflow-y-auto scrollbar-hidden p-4">
+          {/* Step 1: Cart Items */}
           {step === 1 && (
             <>
               {cartItems.length === 0 ? (
@@ -268,152 +295,152 @@ export default function FloatingCart() {
             </>
           )}
 
-         {/* Step 2: Checkout */}
-{step === 2 && (
-  <div className="space-y-4">
-    {/* Delivery Address */}
-    <div>
-      <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
-      <div className="border border-green-300 rounded-lg px-3 py-2 bg-green-50 flex items-center justify-between">
-        <span>
-          {selectedAddress?.address
-            ? `${selectedAddress.title} - ${selectedAddress.address}`
-            : "No address selected"}
-        </span>
+          {/* Step 2: Checkout */}
+          {step === 2 && (
+            <div className="space-y-4">
+              {/* Delivery Address */}
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
+                <div className="border border-green-300 rounded-lg px-3 py-2 bg-green-50 flex items-center justify-between">
+                  <span>
+                    {selectedAddress?.address
+                      ? `${selectedAddress.title} - ${selectedAddress.address}`
+                      : "No address selected"}
+                  </span>
 
-        {/* Edit Address Icon */}
-        <div className="flex gap-2 ml-2">
-          <button
-            onClick={() => setModalType("existing")}
-            className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-            title="Edit Address"
-          >
-            <Edit className="w-4 h-4 text-gray-700" />
-          </button>
-        </div>
-      </div>
-    </div>
+                  {/* Edit Address Icon */}
+                  <div className="flex gap-2 ml-2">
+                    <button
+                      onClick={() => setModalType("existing")}
+                      className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
+                      title="Edit Address"
+                    >
+                      <Edit className="w-4 h-4 text-gray-700" />
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-    {/* Payment Method */}
-    <div className="relative">
-      <h3 className="font-semibold text-gray-700 mb-2">Payment Method</h3>
-      <div className="border border-green-300 rounded-lg bg-green-50 p-3 space-y-2">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="radio"
-            name="paymentMethod"
-            className="accent-green-600 w-4 h-4"
-            defaultChecked
-          />
-          <span>Cash on Delivery</span>
-        </label>
-      </div>
-    </div>
+              {/* Payment Method */}
+              <div className="relative">
+                <h3 className="font-semibold text-gray-700 mb-2">Payment Method</h3>
+                <div className="border border-green-300 rounded-lg bg-green-50 p-3 space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      className="accent-green-600 w-4 h-4"
+                      defaultChecked
+                    />
+                    <span>Cash on Delivery</span>
+                  </label>
+                </div>
+              </div>
 
-    {/* Voucher Code */}
-    <div className="flex gap-2 mt-2">
-      <input
-        type="text"
-        placeholder="Enter voucher code"
-        value={voucher}
-        onChange={(e) => setVoucher(e.target.value)}
-        className="flex-1 border border-green-300 rounded-lg px-3 py-2 text-sm outline-none bg-green-50"
-      />
-      <button className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-1">
-        <Percent size={16} /> Apply
-      </button>
-    </div>
+              {/* Voucher Code */}
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  placeholder="Enter voucher code"
+                  value={voucher}
+                  onChange={(e) => setVoucher(e.target.value)}
+                  className="flex-1 border border-green-300 rounded-lg px-3 py-2 text-sm outline-none bg-green-50"
+                />
+                <button className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 flex items-center gap-1">
+                  <Percent size={16} /> Apply
+                </button>
+              </div>
 
-    {/* Special Instructions */}
-    <div className="mt-2">
-      <label className="block font-semibold text-gray-700 mb-2">
-        Special Instructions
-      </label>
-      <textarea
-        value={specialInstructions}
-        onChange={(e) => setSpecialInstructions(e.target.value)}
-        placeholder="Add any notes (e.g., extra spicy, no onions)..."
-        className="w-full border border-green-300 rounded-lg px-3 py-2 text-sm outline-none bg-green-50"
-        rows={3}
-      />
-    </div>
+              {/* Special Instructions */}
+              <div className="mt-2">
+                <label className="block font-semibold text-gray-700 mb-2">
+                  Special Instructions
+                </label>
+                <textarea
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value)}
+                  placeholder="Add any notes (e.g., extra spicy, no onions)..."
+                  className="w-full border border-green-300 rounded-lg px-3 py-2 text-sm outline-none bg-green-50"
+                  rows={3}
+                />
+              </div>
 
-    <TotalsSummary />
+              <TotalsSummary />
 
-    {/* ExistingAddresses Modal */}
-    <AnimatePresence>
-      {modalType === "existing" && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <ExistingAddresses
-            onClose={() => setModalType(null)}
-            savedAddresses={savedAddresses}
-            selectedAddress={selectedAddress}
-            setSelectedAddress={setSelectedAddress}
-            setActiveAddress={setActiveAddressAPI}
-            onAddNewAddress={() => setModalType("add")}
-          />
-        </div>
-      )}
-    </AnimatePresence>
-  </div>
-)}
+              {/* ExistingAddresses Modal */}
+              <AnimatePresence>
+                {modalType === "existing" && (
+                  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <ExistingAddresses
+                      onClose={() => setModalType(null)}
+                      savedAddresses={savedAddresses}
+                      selectedAddress={selectedAddress}
+                      setSelectedAddress={setSelectedAddress}
+                      setActiveAddress={setActiveAddressAPI}
+                      onAddNewAddress={() => setModalType("add")}
+                    />
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
-{step === 3 && (
-  <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8 overflow-hidden">
-    <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-10 max-w-md w-full text-center">
-      
-      {/* Success Animation */}
-      <div className="flex justify-center mt-2">
-        <Lottie
-          animationData={checkedDone}
-          loop={false}
-          className="w-32 h-32 sm:w-40 sm:h-40"
-        />
-      </div>
+          {step === 3 && (
+            <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8 overflow-hidden">
+              <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-10 max-w-md w-full text-center">
 
-      {/* Title with Icon */}
-      <div className="flex items-center justify-center gap-3 mt-4">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-8 h-8 text-green-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        <h3 className="text-2xl sm:text-3xl font-bold text-gray-800">
-          Order Placed Successfully
-        </h3>
-      </div>
+                {/* Success Animation */}
+                <div className="flex justify-center mt-2">
+                  <Lottie
+                    animationData={checkedDone}
+                    loop={false}
+                    className="w-32 h-32 sm:w-40 sm:h-40"
+                  />
+                </div>
 
-      {/* Subtitle */}
-      <p className="text-gray-600 mt-2 text-sm sm:text-base">
-        Sit back and relax. Your food is being prepared and will arrive soon.
-      </p>
+                {/* Title with Icon */}
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-8 h-8 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                    Order Placed Successfully
+                  </h3>
+                </div>
 
-      {/* Delivery Boy Illustration */}
-      <div className="flex justify-center mt-6">
-        <img
-          src={deliveryBoyIcon}
-          alt="Delivery Icon"
-          className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
-        />
-      </div>
+                {/* Subtitle */}
+                <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                  Sit back and relax. Your food is being prepared and will arrive soon.
+                </p>
 
-      {/* CTA Buttons */}
-      <div className="mt-6 flex flex-col gap-3">
-        <button
-          onClick={() => navigate("/orders")}
-          className="w-full border border-green-600 text-green-600 py-3 rounded-xl font-semibold hover:bg-green-50 transition"
-        >
-          View My Orders
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                {/* Delivery Boy Illustration */}
+                <div className="flex justify-center mt-6">
+                  <img
+                    src={deliveryBoyIcon}
+                    alt="Delivery Icon"
+                    className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
+                  />
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="mt-6 flex flex-col gap-3">
+                  <button
+                    onClick={() => navigate("/orders")}
+                    className="w-full border border-green-600 text-green-600 py-3 rounded-xl font-semibold hover:bg-green-50 transition"
+                  >
+                    View My Orders
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
 
         </div>

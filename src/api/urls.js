@@ -9,11 +9,17 @@ const URLS = {
     SHOW_ORDERS: "/api/showOrders",
     SHOW_ORDER_DETAILS: "/api/showOrderDetails",
     SHOW_SETTINGS: "/api/showSettings",
+    SHOW_CART_PRODUCTS: "/api/showCartProducts",
+    SHOW_ADDRESSES: "/api/showAddresses",
+    SET_ACTIVE_ADDRESS: "/api/setActiveAddress",
+    UPDATE_CART_ITEM: "/api/updateCartItemQuantity",
+    REMOVE_TO_CART: "/api/removeToCart",
+    EMPTY_CART: "/api/emptyCart",
+    ADD_ORDER: "/api/addOrder",
 
 
 
 
-    
 };
 
 export default URLS;
