@@ -1,6 +1,5 @@
 // src/pages/Orders.jsx
 import { useEffect, useState } from "react";
-import api from "../api/axios";
 import {
   TruckIcon,
   ClockIcon,
@@ -14,6 +13,9 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import OrderDetailsModal from "../components/OrderDetails/OrderDetailsModal";
 import "../styles/scrollbar.css";
+import { GET } from "../api/httpMethods";
+import URLS from "../api/urls";
+
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -40,7 +42,7 @@ export default function Orders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get("/api/showOrders");
+        const res = await GET(URLS.SHOW_ORDERS);
         if (Array.isArray(res.data.records)) {
           const mappedOrders = res.data.records.map((o) => {
             let status = o.status?.trim().toLowerCase();
@@ -105,9 +107,10 @@ export default function Orders() {
   const openOrderDetails = async (id) => {
     try {
       setDetailsLoading(true);
-      const res = await api.get(`/api/showOrderDetails?order_id=${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+      const res = await GET(`${URLS.SHOW_ORDER_DETAILS}?order_id=${id}`, {
+        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
       });
+
       if (res.data) setSelectedOrder(res.data);
     } catch (err) {
       console.error("Error fetching order details:", err);
@@ -140,8 +143,8 @@ export default function Orders() {
                 key={tab.name}
                 onClick={() => setFilterStatus(tab.name)}
                 className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition ${filterStatus === tab.name
-                    ? "bg-gradient-to-r from-green-500 to-green-700 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-gradient-to-r from-green-500 to-green-700 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -215,12 +218,12 @@ export default function Orders() {
                   {/* Status Badge */}
                   <span
                     className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${order.status === "delivered"
-                        ? "bg-green-100 text-green-700"
-                        : order.status === "pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : order.status === "cancelled"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
+                      ? "bg-green-100 text-green-700"
+                      : order.status === "pending"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : order.status === "cancelled"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-blue-100 text-blue-700"
                       }`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
