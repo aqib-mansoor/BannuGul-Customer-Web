@@ -20,7 +20,9 @@ import {
   Key,
   Settings,
 } from "lucide-react";
-import api from "../api/axios";
+import { POST } from "../api/httpMethods";
+import  URLS from "../api/urls";
+
 
 export default function Profile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -49,8 +51,8 @@ export default function Profile() {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const res = await api.post(
-        "/api/updateProfile",
+      const res = await POST(
+        URLS.UPDATE_PROFILE,
         {
           name: formData.name,
           email: formData.email,
@@ -59,6 +61,7 @@ export default function Profile() {
         },
         { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` } }
       );
+
       if (!res.data.error) {
         setUser({ ...user, ...formData });
         localStorage.setItem("user", JSON.stringify({ ...user, ...formData }));
@@ -173,29 +176,29 @@ export default function Profile() {
 
           {/* Right Panel: Perks & General */}
           <div className="md:w-2/3 p-6 sm:p-10 flex flex-col gap-6 overflow-visible">
-             
-              {/* Settings Icon Top Right */}
+
+            {/* Settings Icon Top Right */}
             <div className="absolute top-6 right-6 cursor-pointer">
               <Settings className="w-6 h-6 text-gray-600 hover:text-gray-800 transition" />
             </div>
 
-             {/* Perks Section */}
-<div>
-  <h3 className="text-xl font-semibold text-gray-700 mb-4">
-    Your Essentials
-  </h3>
-  <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:flex sm:flex-row sm:gap-2">
-    {perks.map((item) => (
-      <div
-        key={item.label}
-        className="flex flex-col items-center justify-center gap-2 bg-green-100 p-4 rounded-2xl shadow-sm hover:scale-105 transition cursor-pointer text-center w-full sm:w-auto md:w-[120px] md:h-[120px]"
-      >
-        <item.icon className="text-green-600 w-6 h-6" />
-        <span className="text-sm font-medium">{item.label}</span>
-      </div>
-    ))}
-  </div>
-</div>
+            {/* Perks Section */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">
+                Your Essentials
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:flex sm:flex-row sm:gap-2">
+                {perks.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex flex-col items-center justify-center gap-2 bg-green-100 p-4 rounded-2xl shadow-sm hover:scale-105 transition cursor-pointer text-center w-full sm:w-auto md:w-[120px] md:h-[120px]"
+                  >
+                    <item.icon className="text-green-600 w-6 h-6" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
 
             {/* General Section */}
