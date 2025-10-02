@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api/axios";
 import Hero from "../components/RestaurantDetails/Hero";
 import MenuCategories from "../components/RestaurantDetails/MenuCategories";
 import Footer from "../components/Footer"
+import { GET } from "../api/httpMethods";
+import URLS from "../api/urls";
+
+
 
 export default function RestaurantDetails() {
   const { id } = useParams();
@@ -13,7 +16,7 @@ export default function RestaurantDetails() {
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const res = await api.get("/api/showRestaurants");
+        const res = await GET(URLS.SHOW_RESTAURANTS);
         const found = res.data.records?.find(
           (rest) => String(rest.id) === String(id)
         );
@@ -35,7 +38,7 @@ export default function RestaurantDetails() {
     <div className="bg-gray-50 min-h-screen">
       <Hero restaurant={restaurant} />
       <MenuCategories restaurantId={restaurant.id} />
-      <Footer/>
+      <Footer />
     </div>
   );
 }

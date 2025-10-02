@@ -4,6 +4,8 @@ const URLS = {
   LOGIN_PHONE: "api/loginPhone",
   REGISTER: "api/register",
   UPDATE_PROFILE: "/api/updateProfile",   
+  SHOW_RESTAURANTS: "/api/showRestaurants",
+
 
 
   // add others as needed
