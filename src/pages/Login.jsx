@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, HelpCircle } from "lucide-react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import api from "../api/axios";
+import { POST } from "../api/httpMethods";
+import URLS from "../api/urls";
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState("email");
@@ -30,12 +31,11 @@ export default function Login() {
       let res;
       if (activeTab === "email") {
         const payload = { email, password, login_type: "MANUAL", user_type: "USER" };
-        res = await api.post("/api/login", payload);
+        res = await POST(URLS.LOGIN_EMAIL, payload);
       } else {
         const payload = { phone, password, login_type: "MANUAL", user_type: "USER" };
-        res = await api.post("/api/loginPhone", payload);
+        res = await POST(URLS.LOGIN_PHONE, payload);
       }
-
       if (!res.data.error) {
         const userData = {
           ...res.data.records,
@@ -87,17 +87,15 @@ export default function Login() {
           {/* Tabs */}
           <div className="flex mb-6 border border-gray-300 rounded-full overflow-hidden shadow-sm">
             <button
-              className={`flex-1 py-3 font-semibold ${
-                activeTab === "email" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
+              className={`flex-1 py-3 font-semibold ${activeTab === "email" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
+                }`}
               onClick={() => setActiveTab("email")}
             >
               Email
             </button>
             <button
-              className={`flex-1 py-3 font-semibold ${
-                activeTab === "phone" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
+              className={`flex-1 py-3 font-semibold ${activeTab === "phone" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
+                }`}
               onClick={() => setActiveTab("phone")}
             >
               Phone
@@ -189,17 +187,15 @@ export default function Login() {
           {/* Tabs */}
           <div className="flex mb-6 border border-gray-300 rounded-full overflow-hidden shadow-sm">
             <button
-              className={`flex-1 py-2 font-semibold ${
-                activeTab === "email" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
+              className={`flex-1 py-2 font-semibold ${activeTab === "email" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
+                }`}
               onClick={() => setActiveTab("email")}
             >
               Email
             </button>
             <button
-              className={`flex-1 py-2 font-semibold ${
-                activeTab === "phone" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}
+              className={`flex-1 py-2 font-semibold ${activeTab === "phone" ? "bg-green-600 text-white" : "text-gray-500 hover:bg-gray-100"
+                }`}
               onClick={() => setActiveTab("phone")}
             >
               Phone

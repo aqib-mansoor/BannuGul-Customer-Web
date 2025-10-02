@@ -1,10 +1,10 @@
-// src/pages/Register.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, HelpCircle } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import api from "../api/axios";
+import { POST } from "../api/httpMethods";   // ✅ use httpMethods
+import  URLS  from "../api/urls";          // ✅ import urls
 
 export default function Register() {
   const navigate = useNavigate();
@@ -50,8 +50,8 @@ export default function Register() {
       formData.append("user_type", "USER");
       if (profileImage) formData.append("profile_image", profileImage);
 
-      const res = await api.post("/api/register", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const res = await POST(URLS.REGISTER, formData, {
+        headers: { "Content-Type": "multipart/form-data" },  // ✅ pass headers
       });
 
       if (res.data && !res.data.error) {
