@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
-import api from "../api/axios";
+import { GET } from "../api/httpMethods";
+import  URLS from "../api/urls";
+
 
 export const SettingsContext = createContext();
 
@@ -10,7 +12,7 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await api.get("/api/showSettings");
+        const res = await GET(URLS.SHOW_SETTINGS);
         if (res && res.data && !res.data.error) {
           setSettings(res.data.records?.[0] || null); // safely take first record
         } else {
