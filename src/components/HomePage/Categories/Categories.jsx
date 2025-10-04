@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import api, { API_IMAGE_URL } from "../../../api/axios";
+import { GET } from "../../../api/httpMethods";
+import URLS  from "../../../api/urls";
+import { API_IMAGE_URL } from "../../../api/axios";
 import "./Categories.css";
 
 export default function Categories() {
@@ -9,7 +11,7 @@ export default function Categories() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await api.get("/api/getCategories");
+        const res = await GET(URLS.GET_CATEGORIES);
         console.log("API raw response:", res.data);
         setCategories(Array.isArray(res.data.records) ? res.data.records : []);
       } catch (err) {

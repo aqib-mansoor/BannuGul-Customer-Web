@@ -22,6 +22,8 @@ const URLS = {
     ORDER_CANCEL_USER: "/api/orderCancelUser",
     SEARCH_RESTAURANTS: "/api/searchRestaurantsWithProducts",
     SHOW_RESTAURANTS: "/api/showRestaurants",
+    GET_SLIDERS: "/api/getSliders",
+    GET_CATEGORIES: "/api/getCategories",
 
 
 

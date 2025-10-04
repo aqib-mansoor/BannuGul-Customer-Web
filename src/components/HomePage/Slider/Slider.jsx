@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../../../api/axios";
+import { GET } from "../../../api/httpMethods";
+import URLS  from "../../../api/urls";
+
 
 export default function ImageSlider() {
   const [slides, setSlides] = useState([]);
@@ -9,7 +11,7 @@ export default function ImageSlider() {
   useEffect(() => {
     const fetchSlides = async () => {
       try {
-        const res = await api.get("/api/getSliders");
+        const res = await GET(URLS.GET_SLIDERS);
         console.log("Slider API response: ", res.data);
 
        setSlides(Array.isArray(res.data.records) ? res.data.records : []);
