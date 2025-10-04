@@ -1,6 +1,5 @@
 // src/components/RestaurantDetails/MenuCategories.jsx
 import { useEffect, useState, useRef } from "react";
-import api, { API_IMAGE_URL } from "../../api/axios";
 import {
   Utensils,
   Coffee,
@@ -16,6 +15,9 @@ import {
   Minus,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { API_IMAGE_URL } from "../../api/axios";
+import { GET, POST } from "../../api/httpMethods";
+import URLS from "../../api/urls";
 
 export default function MenuCategories({ restaurantId }) {
   const [categories, setCategories] = useState([]);
@@ -32,9 +34,7 @@ export default function MenuCategories({ restaurantId }) {
 
     const fetchCategories = async () => {
       try {
-        const res = await api.get("/api/showRestaurantCategories", {
-          params: { restaurant_id: restaurantId },
-        });
+        const res = await GET(URLS.SHOW_RESTAURANT_CATEGORIES, { restaurant_id: restaurantId });
         if (!res.data.error && res.data.records) {
           setCategories(res.data.records);
           if (res.data.records.length > 0) setActiveCategory(res.data.records[0].id);
@@ -103,8 +103,8 @@ export default function MenuCategories({ restaurantId }) {
 
       if (!existingItem) {
         // Add new item
-        const res = await api.post(
-          "/api/addToCart",
+        const res = await POST(
+          URLS.ADD_TO_CART,
           {
             restaurant_id: restaurantId,
             product_id: product.id,
@@ -128,8 +128,8 @@ export default function MenuCategories({ restaurantId }) {
         }
       } else {
         // Increase quantity
-        const res = await api.post(
-          "/api/updateCartItemQuantity",
+        const res = await POST(
+          URLS.UPDATE_CART_ITEM,
           {
             product_id: existingItem.product_id,
             quantity: existingItem.quantity + 1,
@@ -166,12 +166,11 @@ export default function MenuCategories({ restaurantId }) {
       const newQuantity = existingItem.quantity - 1;
 
       if (newQuantity >= 1) {
-        const res = await api.post(
-          "/api/updateCartItemQuantity",
+        const res = await POST(
+          URLS.UPDATE_CART_ITEM,
           { product_id: existingItem.product_id, quantity: newQuantity },
           { headers }
         );
-
         if (!res.data.error) {
           setCartItems(
             cartItems.map((i) =>
