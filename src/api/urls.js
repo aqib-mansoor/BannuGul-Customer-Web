@@ -27,12 +27,6 @@ const URLS = {
     ADD_ADDRESS: "/api/addAddress",
 
 
-
-
-
-
-
-
 };
 
 export default URLS;

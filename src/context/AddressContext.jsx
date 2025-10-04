@@ -1,5 +1,7 @@
 import { createContext, useState, useEffect } from "react";
-import api from "../api/axios";
+import { GET, POST } from "../api/httpMethods";
+import  URLS  from "../api/urls";
+
 
 export const AddressContext = createContext();
 
@@ -9,7 +11,7 @@ export const AddressProvider = ({ children }) => {
 
   const loadSavedAddresses = async () => {
     try {
-      const res = await api.get("/api/showAddresses");
+      const res = await GET(URLS.SHOW_ADDRESSES);
       if (res && res.data && !res.data.error) {
         setSavedAddresses(res.data.records || []);
         const activeAddr =
