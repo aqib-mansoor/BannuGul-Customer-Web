@@ -16,7 +16,7 @@ const URLS = {
     REMOVE_TO_CART: "/api/removeToCart",
     EMPTY_CART: "/api/emptyCart",
     ADD_ORDER: "/api/addOrder",
-
+    SHOW_RESTAURANT_REVIEWS: "/api/showRestaurantReviews",
 
 
 

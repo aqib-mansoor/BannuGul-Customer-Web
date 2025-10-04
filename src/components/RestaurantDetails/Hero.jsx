@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { Clock, Tag, CircleCheck, CircleX, MapPin, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
+import { GET } from "../../api/httpMethods";
+import URLS  from "../../api/urls";
+
 
 export default function Hero({ restaurant }) {
   const [reviewsInfo, setReviewsInfo] = useState({ average_rating: 0, total_reviews: 0 });
@@ -13,10 +15,7 @@ export default function Hero({ restaurant }) {
 
     const fetchReviews = async () => {
       try {
-        const res = await api.get("/api/showRestaurantReviews", {
-          params: { restaurant_id: restaurant.id },
-        });
-
+        const res = await GET(URLS.SHOW_RESTAURANT_REVIEWS, { restaurant_id: restaurant.id });
         if (!res.data.error && res.data.restaurant) {
           const reviewData = res.data.restaurant;
           setReviewsInfo({
