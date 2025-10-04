@@ -24,6 +24,8 @@ const URLS = {
     SHOW_RESTAURANTS: "/api/showRestaurants",
     GET_SLIDERS: "/api/getSliders",
     GET_CATEGORIES: "/api/getCategories",
+    ADD_ADDRESS: "/api/addAddress",
+
 
 
 

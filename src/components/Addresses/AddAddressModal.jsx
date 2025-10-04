@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { X } from "lucide-react";
 import L from "leaflet";
-import api from "../../api/axios";
+import { POST } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
 
 const customIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
@@ -34,13 +36,14 @@ export default function AddAddressModal({ onClose, reloadAddresses, setSelectedA
     }
 
     try {
-      const res = await api.post("/api/addAddress", {
+      const res = await POST(URLS.ADD_ADDRESS, {
         address: houseAddress,
         title: title,
         location: `${location.lat},${location.lng}`,
         gps_address: pinnedAddress || `${location.lat}° N, ${location.lng}° E`,
         city: "Islamabad",
       });
+
 
       console.log("Address added:", res.data);
 

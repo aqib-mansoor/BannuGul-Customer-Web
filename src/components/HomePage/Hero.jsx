@@ -2,10 +2,13 @@
 import { useState, useEffect, useContext } from "react";
 import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import api from "../../api/axios";
 import AddAddressModal from "../Addresses/AddAddressModal";
 import ExistingAddresses from "../Addresses/ExistingAddresses";
 import { AddressContext } from "../../context/AddressContext";
+import { GET, POST } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
+
 
 export default function Hero() {
   const [modalType, setModalType] = useState(null); // "add" or "existing"
@@ -15,7 +18,7 @@ export default function Hero() {
   // Load saved addresses from API
   const loadSavedAddresses = async () => {
     try {
-      const res = await api.get("/api/showAddresses");
+      const res = await GET(URLS.SHOW_ADDRESSES);
       if (!res.data.error) {
         setSavedAddresses(res.data.records || []);
         if (res.data.records.length > 0 && !selectedAddress) {
@@ -34,7 +37,7 @@ export default function Hero() {
   const setActiveAddress = async (address) => {
     if (!address) return;
     try {
-      await api.post("/api/setActiveAddress", { id: address.id });
+      await POST(URLS.SET_ACTIVE_ADDRESS, { id: address.id });
       setSelectedAddress(address);
     } catch (err) {
       console.error("Error setting active address:", err.response?.data || err.message);
