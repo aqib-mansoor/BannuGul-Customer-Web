@@ -2,7 +2,9 @@
 import { useState, useEffect } from "react";
 import { FiSearch, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import api from "../../api/axios"; // ✅ adjust path if needed
+import { GET } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
 
 export default function Search() {
   const suggestions = [
@@ -53,9 +55,8 @@ export default function Search() {
 
     setLoading(true);
     try {
-      const res = await api.get("/api/searchRestaurantsWithProducts", {
-        params: { title: searchTerm },
-      });
+      const res = await GET(URLS.SEARCH_RESTAURANTS, { title: searchTerm });
+      setResults(res?.records || []);
       setResults(res.data?.records || []);
     } catch (err) {
       console.error("Error searching restaurants:", err);
@@ -198,9 +199,8 @@ export default function Search() {
                       layout
                     >
                       <img
-                        src={`https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${
-                          rest.thumb || "rest1.jpg"
-                        }`}
+                        src={`https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb || "rest1.jpg"
+                          }`}
                         alt={rest.name}
                         className="w-full h-28 object-cover rounded"
                       />

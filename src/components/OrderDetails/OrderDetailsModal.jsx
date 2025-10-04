@@ -1,9 +1,11 @@
 // src/components/orderDetails/OrderDetailsModal.jsx
 import React, { useState } from "react";
-import api from "../../api/axios";
 import Lottie from "lottie-react";
 import { MapPin, Store, Calendar, Hash, Phone, X } from "lucide-react";
 import "../../styles/scrollbar.css";
+import { POST, getAuthHeaders } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
 
 // Import animations
 import cancelAnim from "../../assets/lottie/cancel_state.json";
@@ -84,18 +86,13 @@ export default function OrderDetailsModal({
     }
     try {
       setCancelling(true);
-      const res = await api.post(
-        "/api/orderCancelUser",
+      const res = await POST(
+        URLS.ORDER_CANCEL_USER,
         {
           order_id: selectedOrder.order_summary.order_id,
           reason: cancelReason,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        }
+        { headers: getAuthHeaders() }
       );
 
       if (!res.data.error) {
@@ -139,9 +136,8 @@ export default function OrderDetailsModal({
 
         {alertMessage && (
           <div
-            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${
-              alertType === "success" ? "bg-green-600" : "bg-red-600"
-            }`}
+            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${alertType === "success" ? "bg-green-600" : "bg-red-600"
+              }`}
           >
             {alertMessage}
           </div>
@@ -206,17 +202,15 @@ export default function OrderDetailsModal({
                         <div className="flex items-center w-full">
                           {index !== 0 && (
                             <div
-                              className={`flex-1 h-1 ${
-                                index <= currentIndex ? "bg-green-600" : "bg-gray-300"
-                              }`}
+                              className={`flex-1 h-1 ${index <= currentIndex ? "bg-green-600" : "bg-gray-300"
+                                }`}
                             />
                           )}
                           <div
                             className={`w-8 h-8 flex items-center justify-center rounded-full z-10
-                              ${
-                                isCompleted
-                                  ? "bg-green-600 text-white"
-                                  : isCurrent
+                              ${isCompleted
+                                ? "bg-green-600 text-white"
+                                : isCurrent
                                   ? "bg-green-300 text-white"
                                   : "bg-gray-200 text-gray-500"
                               }`}
@@ -225,20 +219,18 @@ export default function OrderDetailsModal({
                           </div>
                           {index !== statusSteps.length - 1 && (
                             <div
-                              className={`flex-1 h-1 ${
-                                index < currentIndex ? "bg-green-600" : "bg-gray-300"
-                              }`}
+                              className={`flex-1 h-1 ${index < currentIndex ? "bg-green-600" : "bg-gray-300"
+                                }`}
                             />
                           )}
                         </div>
                         <span
-                          className={`text-xs font-medium text-center mt-1 ${
-                            isCompleted
+                          className={`text-xs font-medium text-center mt-1 ${isCompleted
                               ? "text-green-600"
                               : isCurrent
-                              ? "text-green-800"
-                              : "text-gray-500"
-                          }`}
+                                ? "text-green-800"
+                                : "text-gray-500"
+                            }`}
                         >
                           {step.label}
                         </span>
