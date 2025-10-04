@@ -1,11 +1,16 @@
 // src/components/orderDetails/OrderDetailsModal.jsx
 import React, { useState } from "react";
 import Lottie from "lottie-react";
-import { MapPin, Store, Calendar, Hash, Phone, X } from "lucide-react";
+import { Store, Calendar, Hash, Phone, X } from "lucide-react";
 import "../../styles/scrollbar.css";
 import { POST, getAuthHeaders } from "../../api/httpMethods";
 import URLS from "../../api/urls";
 
+import {
+  STATUS_STEPS,
+  normalizeStatus,
+  default as ORDER_STATUS,
+} from "../../constants/orderstatus";
 
 // Import animations
 import cancelAnim from "../../assets/lottie/cancel_state.json";
@@ -36,43 +41,22 @@ export default function OrderDetailsModal({
 
   if (!selectedOrder) return null;
 
-  // Normalize backend status
-  let currentStatus = selectedOrder.order_summary.status?.toLowerCase();
-  if (currentStatus === "canceled_by_user" || currentStatus === "cancelled_by_user") {
-    currentStatus = "cancelled";
-  } else if (currentStatus === "preparing" || currentStatus === "processing") {
-    currentStatus = "processing";
-  } else if (currentStatus === "ready_to_deliver") {
-    currentStatus = "dispatched";
-  } else if (currentStatus === "pending") {
-    currentStatus = "pending";
-  } else if (currentStatus === "accepted") {
-    currentStatus = "accepted";
-  } else if (currentStatus === "DELIVERED") {
-    currentStatus = "DELIVERED";
-  }
-
-  const statusSteps = [
-    { name: "pending", label: "Pending" },
-    { name: "accepted", label: "Accepted" },
-    { name: "processing", label: "Processing" },
-    { name: "dispatched", label: "Dispatched" },
-    { name: "delivered", label: "Delivered" },
-  ];
+  // ✅ Normalize backend status using constants
+  let currentStatus = normalizeStatus(selectedOrder.order_summary.status);
 
   const getLottieAnimation = () => {
     switch (currentStatus) {
-      case "pending":
+      case ORDER_STATUS.PENDING:
         return pendingAnim;
-      case "accepted":
-        return deliveredAnim;
-      case "processing":
+      case ORDER_STATUS.ACCEPTED:
+        return deliveredAnim; // you used deliveredAnim for accepted in your old code
+      case ORDER_STATUS.PROCESSING:
         return preparingAnim;
-      case "dispatched":
+      case ORDER_STATUS.DISPATCHED:
         return dispatchedAnim;
-      case "delivered":
+      case ORDER_STATUS.DELIVERED:
         return deliveredAnim;
-      case "cancelled":
+      case ORDER_STATUS.CANCELLED:
         return cancelAnim;
       default:
         return null;
@@ -136,8 +120,9 @@ export default function OrderDetailsModal({
 
         {alertMessage && (
           <div
-            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${alertType === "success" ? "bg-green-600" : "bg-red-600"
-              }`}
+            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${
+              alertType === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
           >
             {alertMessage}
           </div>
@@ -162,7 +147,9 @@ export default function OrderDetailsModal({
                   </p>
                   <p className="flex items-center gap-2">
                     <Calendar size={14} className="text-green-600" />
-                    {new Date(selectedOrder.order_summary.order_date).toLocaleString()}
+                    {new Date(
+                      selectedOrder.order_summary.order_date
+                    ).toLocaleString()}
                   </p>
                   {selectedOrder.restaurant?.phone && (
                     <p className="flex items-center gap-2">
@@ -180,15 +167,19 @@ export default function OrderDetailsModal({
               {/* Lottie Animation */}
               {lottieAnimation && (
                 <div className="flex justify-center mb-4">
-                  <Lottie animationData={lottieAnimation} loop className="w-28 h-28" />
+                  <Lottie
+                    animationData={lottieAnimation}
+                    loop
+                    className="w-28 h-28"
+                  />
                 </div>
               )}
 
               {/* Status Stepper */}
-              {currentStatus !== "cancelled" && (
+              {currentStatus !== ORDER_STATUS.CANCELLED && (
                 <div className="flex justify-between items-center mb-5">
-                  {statusSteps.map((step, index) => {
-                    const currentIndex = statusSteps.findIndex(
+                  {STATUS_STEPS.map((step, index) => {
+                    const currentIndex = STATUS_STEPS.findIndex(
                       (s) => s.name === currentStatus
                     );
                     const isCompleted = index < currentIndex;
@@ -202,35 +193,45 @@ export default function OrderDetailsModal({
                         <div className="flex items-center w-full">
                           {index !== 0 && (
                             <div
-                              className={`flex-1 h-1 ${index <= currentIndex ? "bg-green-600" : "bg-gray-300"
-                                }`}
+                              className={`flex-1 h-1 ${
+                                index <= currentIndex
+                                  ? "bg-green-600"
+                                  : "bg-gray-300"
+                              }`}
                             />
                           )}
                           <div
                             className={`w-8 h-8 flex items-center justify-center rounded-full z-10
-                              ${isCompleted
-                                ? "bg-green-600 text-white"
-                                : isCurrent
+                              ${
+                                isCompleted
+                                  ? "bg-green-600 text-white"
+                                  : isCurrent
                                   ? "bg-green-300 text-white"
                                   : "bg-gray-200 text-gray-500"
                               }`}
                           >
-                            <span className="text-xs font-semibold">{index + 1}</span>
+                            <span className="text-xs font-semibold">
+                              {index + 1}
+                            </span>
                           </div>
-                          {index !== statusSteps.length - 1 && (
+                          {index !== STATUS_STEPS.length - 1 && (
                             <div
-                              className={`flex-1 h-1 ${index < currentIndex ? "bg-green-600" : "bg-gray-300"
-                                }`}
+                              className={`flex-1 h-1 ${
+                                index < currentIndex
+                                  ? "bg-green-600"
+                                  : "bg-gray-300"
+                              }`}
                             />
                           )}
                         </div>
                         <span
-                          className={`text-xs font-medium text-center mt-1 ${isCompleted
+                          className={`text-xs font-medium text-center mt-1 ${
+                            isCompleted
                               ? "text-green-600"
                               : isCurrent
-                                ? "text-green-800"
-                                : "text-gray-500"
-                            }`}
+                              ? "text-green-800"
+                              : "text-gray-500"
+                          }`}
                         >
                           {step.label}
                         </span>
@@ -252,7 +253,8 @@ export default function OrderDetailsModal({
                       className="py-1 flex justify-between text-xs items-center"
                     >
                       <span>
-                        {item.product.name} {item.size && `(${item.size})`} × {item.quantity}
+                        {item.product.name}{" "}
+                        {item.size && `(${item.size})`} × {item.quantity}
                       </span>
                       <span className="text-green-600">Rs. {item.price}</span>
                     </li>
@@ -269,13 +271,15 @@ export default function OrderDetailsModal({
                   </div>
                   <div className="flex justify-between border-t pt-1 mt-1">
                     <span className="font-semibold">Total</span>
-                    <span className="font-bold text-green-600">Rs. {grandTotal}</span>
+                    <span className="font-bold text-green-600">
+                      Rs. {grandTotal}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Cancel Button */}
-              {currentStatus === "pending" && (
+              {currentStatus === ORDER_STATUS.PENDING && (
                 <div>
                   {!showCancelField ? (
                     <button

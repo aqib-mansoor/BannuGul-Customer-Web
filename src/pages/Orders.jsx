@@ -1,21 +1,12 @@
 // src/pages/Orders.jsx
 import { useEffect, useState } from "react";
-import {
-  TruckIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  CubeIcon,
-  ArrowPathIcon,
-  XCircleIcon,
-  EyeIcon,
-} from "@heroicons/react/24/outline";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import OrderDetailsModal from "../components/OrderDetails/OrderDetailsModal";
 import "../styles/scrollbar.css";
 import { GET } from "../api/httpMethods";
 import URLS from "../api/urls";
-
+import ORDER_STATUS, { STATUS_TABS } from "../constants/orderstatus";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -24,20 +15,10 @@ export default function Orders() {
   const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState(ORDER_STATUS.ALL);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const statusTabs = [
-    { name: "all", label: "All", icon: TruckIcon },
-    { name: "pending", label: "Pending", icon: ClockIcon },
-    { name: "accepted", label: "Accepted", icon: CheckCircleIcon },
-    { name: "processing", label: "Processing", icon: CubeIcon },
-    { name: "dispatched", label: "Dispatched", icon: ArrowPathIcon },
-    { name: "delivered", label: "Delivered", icon: CheckCircleIcon },
-    { name: "cancelled", label: "Cancelled", icon: XCircleIcon },
-  ];
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -48,22 +29,25 @@ export default function Orders() {
             let status = o.status?.trim().toLowerCase();
 
             // Normalize backend statuses
-            if (status === "canceled_by_user" || status === "cancelled_by_user" || status === "cancelled") {
-              status = "cancelled";
+            if (
+              status === "canceled_by_user" ||
+              status === "cancelled_by_user" ||
+              status === "cancelled"
+            ) {
+              status = ORDER_STATUS.CANCELLED;
             } else if (status === "preparing" || status === "processing") {
-              status = "processing";
+              status = ORDER_STATUS.PROCESSING;
             } else if (status === "ready_to_deliver") {
-              status = "dispatched";
+              status = ORDER_STATUS.DISPATCHED;
             } else if (status === "accepted") {
-              status = "accepted";
+              status = ORDER_STATUS.ACCEPTED;
             } else if (status === "pending") {
-              status = "pending";
-            } else if (status === "delivered") {   // ✅ lowercase
-              status = "delivered";
+              status = ORDER_STATUS.PENDING;
+            } else if (status === "delivered") {
+              status = ORDER_STATUS.DELIVERED;
             } else {
-              status = "pending"; // fallback
+              status = ORDER_STATUS.PENDING; // fallback
             }
-
 
             return { ...o, status };
           });
@@ -87,12 +71,16 @@ export default function Orders() {
   // Filter orders
   useEffect(() => {
     let filtered = [...orders];
-    if (filterStatus !== "all")
+    if (filterStatus !== ORDER_STATUS.ALL)
       filtered = filtered.filter((o) => o.status === filterStatus);
     if (fromDate)
-      filtered = filtered.filter((o) => new Date(o.created_at) >= new Date(fromDate));
+      filtered = filtered.filter(
+        (o) => new Date(o.created_at) >= new Date(fromDate)
+      );
     if (toDate)
-      filtered = filtered.filter((o) => new Date(o.created_at) <= new Date(toDate));
+      filtered = filtered.filter(
+        (o) => new Date(o.created_at) <= new Date(toDate)
+      );
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -123,7 +111,7 @@ export default function Orders() {
 
   const handleCancelOrder = (orderId) => {
     const updatedOrders = orders.map((o) =>
-      o.id === orderId ? { ...o, status: "cancelled" } : o
+      o.id === orderId ? { ...o, status: ORDER_STATUS.CANCELLED } : o
     );
     setOrders(updatedOrders);
     setFilteredOrders(updatedOrders);
@@ -136,16 +124,17 @@ export default function Orders() {
       {/* Status Tabs */}
       <div className="sticky top-[70px] z-40 flex justify-center bg-gray-100 border-b border-gray-200 shadow-sm py-3">
         <div className="flex gap-3 overflow-x-auto px-4 scrollbar-none">
-          {statusTabs.map((tab) => {
+          {STATUS_TABS.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.name}
                 onClick={() => setFilterStatus(tab.name)}
-                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition ${filterStatus === tab.name
-                  ? "bg-gradient-to-r from-green-500 to-green-700 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition ${
+                  filterStatus === tab.name
+                    ? "bg-gradient-to-r from-green-500 to-green-700 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
@@ -163,7 +152,14 @@ export default function Orders() {
           <p className="text-center text-red-500 mt-10">{error}</p>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-10">
-            <TruckIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <svg
+              className="h-12 w-12 text-gray-400 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M3 3h18l-2 13H5L3 3z" />
+            </svg>
             <p className="text-gray-500 text-lg mb-2">No orders found</p>
             <p className="text-gray-400 text-sm">Try changing the filters above</p>
           </div>
@@ -208,7 +204,6 @@ export default function Orders() {
                           </p>
                         </div>
                         <span className="flex items-center gap-1 text-sm font-medium text-green-600 hover:underline">
-                          <EyeIcon className="w-4 h-4" />
                           View Details
                         </span>
                       </div>
@@ -217,14 +212,15 @@ export default function Orders() {
 
                   {/* Status Badge */}
                   <span
-                    className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${order.status === "delivered"
-                      ? "bg-green-100 text-green-700"
-                      : order.status === "pending"
+                    className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+                      order.status === ORDER_STATUS.DELIVERED
+                        ? "bg-green-100 text-green-700"
+                        : order.status === ORDER_STATUS.PENDING
                         ? "bg-yellow-100 text-yellow-700"
-                        : order.status === "cancelled"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
+                        : order.status === ORDER_STATUS.CANCELLED
+                        ? "bg-red-100 text-red-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
