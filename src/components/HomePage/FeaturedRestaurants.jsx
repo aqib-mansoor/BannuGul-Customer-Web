@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ import navigate
-import api from "../../../api/axios"; // adjust path as needed
-import { Heart } from "lucide-react"; // ✅ favorite icon
+import { useNavigate } from "react-router-dom";
+import { Heart } from "lucide-react"; 
+import { GET } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
 
 export default function FeaturedRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
-  const [favorites, setFavorites] = useState({}); // ✅ track favorites
-  const navigate = useNavigate(); // ✅ init navigate
+  const [favorites, setFavorites] = useState({});
+  const navigate = useNavigate(); 
 
   // Fetch restaurants from API
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const res = await api.get("/api/showRestaurants");
+        const res = await GET(URLS.SHOW_RESTAURANTS);
         console.log("Restaurants API response:", res.data);
 
         setRestaurants(Array.isArray(res.data.records) ? res.data.records : []);

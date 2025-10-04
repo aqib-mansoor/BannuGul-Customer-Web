@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import api from "../../api/axios";
 import {
   MapPin,
   Clock,
@@ -9,17 +8,21 @@ import {
   Heart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { GET } from "../../api/httpMethods";
+import URLS from "../../api/urls";
+
+
 
 export default function NearbyRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [ratings, setRatings] = useState({});
-  const [favorites, setFavorites] = useState({}); // ✅ track favorites
+  const [favorites, setFavorites] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const res = await api.get("/api/showRestaurants");
+        const res = await GET(URLS.SHOW_RESTAURANTS);
         const data = res.data?.records || [];
         setRestaurants(data);
 
@@ -28,15 +31,14 @@ export default function NearbyRestaurants() {
         await Promise.all(
           data.map(async (rest) => {
             try {
-              const ratingRes = await api.get("/api/showRestaurantReviews", {
-                params: { restaurant_id: rest.id },
-              });
+              const ratingRes = await GET(URLS.SHOW_RESTAURANT_REVIEWS, { restaurant_id: rest.id });
+
               const restaurantInfo = ratingRes.data?.restaurant;
               ratingsData[rest.id] = restaurantInfo
                 ? {
-                    avgRating: restaurantInfo.average_rating,
-                    totalReviews: restaurantInfo.total_reviews,
-                  }
+                  avgRating: restaurantInfo.average_rating,
+                  totalReviews: restaurantInfo.total_reviews,
+                }
                 : { avgRating: 0, totalReviews: 0 };
             } catch {
               ratingsData[rest.id] = { avgRating: 0, totalReviews: 0 };
@@ -104,9 +106,8 @@ export default function NearbyRestaurants() {
                 }}
               >
                 <Heart
-                  className={`w-5 h-5 ${
-                    favorites[rest.id] ? "text-green-600" : "text-gray-400"
-                  }`}
+                  className={`w-5 h-5 ${favorites[rest.id] ? "text-green-600" : "text-gray-400"
+                    }`}
                   fill={favorites[rest.id] ? "currentColor" : "none"}
                 />
               </button>
@@ -139,11 +140,10 @@ export default function NearbyRestaurants() {
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span
-                    className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
-                      rest.status === 1
+                    className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${rest.status === 1
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {rest.status === 1 ? (
                       <CircleCheck size={12} />

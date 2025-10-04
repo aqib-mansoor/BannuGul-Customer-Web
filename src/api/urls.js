@@ -21,6 +21,7 @@ const URLS = {
     ADD_TO_CART: "/api/addToCart",
     ORDER_CANCEL_USER: "/api/orderCancelUser",
     SEARCH_RESTAURANTS: "/api/searchRestaurantsWithProducts",
+    SHOW_RESTAURANTS: "/api/showRestaurants",
 
 
 

@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/HomePage/Hero";
 import Categories from "../components/HomePage/Categories/Categories";
 import Slider from "../components/HomePage/Slider/Slider";
-import FeaturedRestaurants from "../components/HomePage/FeaturedRestaurants/FeaturedRestaurants";
+import FeaturedRestaurants from "../components/HomePage/FeaturedRestaurants";
 import Search from "../components/HomePage/Search"
 
 import { Sliders } from "lucide-react";
