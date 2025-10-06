@@ -28,6 +28,7 @@ export default function MenuCategories({ restaurantId }) {
 
   const categoryRefs = useRef({});
   const { cartItems = [], setCartItems } = useCart();
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -200,24 +201,21 @@ export default function MenuCategories({ restaurantId }) {
     <div className="mt-0">
       {error && <p className="text-red-500 mb-2 text-center">{error}</p>}
 
-      {/* ✅ Sticky Category Bar (below Hero sticky navbar) */}
-      <div className="sticky top-[64px] z-40 bg-white/80 backdrop-blur-md border-b shadow-sm">
-        <div className="flex flex-wrap justify-center items-center gap-2 px-2 py-3 overflow-x-auto">
+      {/* Categories - horizontal scroll */}
+      <div className="overflow-x-auto scrollbar-hide py-3 px-2">
+        <div className="flex gap-2 min-w-max md:justify-center md:flex-wrap">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => scrollToCategory(cat.id)}
               className={`flex items-center gap-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
-                ${
-                  activeCategory === cat.id
-                    ? "bg-green-600 text-white shadow-md scale-105"
-                    : "bg-gray-100 text-gray-700 hover:bg-green-100 hover:scale-105"
+          ${activeCategory === cat.id
+                  ? "bg-green-600 text-white shadow-md scale-105"
+                  : "bg-gray-100 text-gray-700 hover:bg-green-100 hover:scale-105"
                 }`}
             >
               {getIcon(cat.name)}
-              <span className="truncate max-w-[90px] text-center">
-                {cat.name}
-              </span>
+              <span className="truncate max-w-[90px] text-center">{cat.name}</span>
             </button>
           ))}
 
@@ -235,7 +233,8 @@ export default function MenuCategories({ restaurantId }) {
         </div>
       </div>
 
-      {/* ✅ Menu Categories & Products */}
+
+      {/* Menu Categories & Products */}
       <div className="p-3 md:p-6">
         {categories.map((category) => {
           const filteredProducts = filterProducts(category.products || []);
