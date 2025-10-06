@@ -7,6 +7,7 @@ import URLS from "../../api/urls";
 export default function FeaturedRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [favorites, setFavorites] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -15,38 +16,36 @@ export default function FeaturedRestaurants() {
     const fetchRestaurants = async () => {
       try {
         const res = await GET(URLS.SHOW_RESTAURANTS);
-        console.log("Restaurants API response:", res.data);
-
         setRestaurants(Array.isArray(res.data.records) ? res.data.records : []);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching restaurants:", err);
+        setLoading(true); // keep placeholders if API fails
       }
     };
-
     fetchRestaurants();
   }, []);
 
-  // Toggle favorite
   const toggleFavorite = (id) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Scroll handlers for desktop
   const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
   };
   const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
   };
 
-  if (!restaurants.length) return null;
+  // Number of placeholder cards
+  const placeholderCount = 6;
+
+  // Always show placeholders if loading, otherwise show data
+  const renderItems = loading
+    ? Array.from({ length: placeholderCount }).map((_, index) => ({ placeholder: true, id: index }))
+    : restaurants.length
+    ? restaurants
+    : Array.from({ length: placeholderCount }).map((_, index) => ({ placeholder: true, id: index }));
 
   return (
     <section className="py-6 md:py-8 bg-green-50">
@@ -60,49 +59,20 @@ export default function FeaturedRestaurants() {
         </p>
       </div>
 
-      {/* Restaurants */}
+      {/* Carousel */}
       <div className="max-w-6xl mx-auto px-4 relative">
-        {/* Mobile horizontal scroll */}
+        {/* Mobile scroll */}
         <div className="flex gap-3 overflow-x-auto sm:hidden scrollbar-hide">
-          {restaurants.map((rest) => (
-            <div
-              key={rest.id}
-              className="relative flex-shrink-0 w-48 rounded-lg shadow hover:shadow-md cursor-pointer bg-white"
-              onClick={() => navigate(`/restaurant/${rest.id}`)}
-            >
-              <button
-                className="absolute top-2 right-2 bg-white p-1 rounded-full shadow"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(rest.id);
-                }}
-              >
-                <Heart
-                  className={`w-5 h-5 ${favorites[rest.id] ? "text-green-600" : "text-gray-400"}`}
-                  fill={favorites[rest.id] ? "currentColor" : "none"}
-                />
-              </button>
-
-              <img
-                src={
-                  rest.thumb
-                    ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb}`
-                    : "/placeholder.png"
-                }
-                alt={rest.name}
-                className="w-full h-28 object-cover rounded-t-lg"
-              />
-              <div className="p-2 text-center h-20 flex flex-col justify-between">
-                <h3 className="font-semibold text-gray-800 text-sm truncate">{rest.name}</h3>
-                <p className="text-xs text-gray-500 mt-1 overflow-hidden text-ellipsis line-clamp-2">
-                  {rest.description || "Delicious meals and great service."}
-                </p>
-              </div>
-            </div>
-          ))}
+          {renderItems.map((rest) =>
+            rest.placeholder ? (
+              <PlaceholderCard key={rest.id} />
+            ) : (
+              <RestaurantCard key={rest.id} rest={rest} favorites={favorites} toggleFavorite={toggleFavorite} navigate={navigate} />
+            )
+          )}
         </div>
 
-        {/* Desktop horizontal scroll with buttons */}
+        {/* Desktop scroll */}
         <div className="hidden sm:block relative">
           <button
             onClick={scrollLeft}
@@ -111,47 +81,14 @@ export default function FeaturedRestaurants() {
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
 
-          <div
-            ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-4"
-          >
-            {restaurants.map((rest) => (
-              <div
-                key={rest.id}
-                className="relative w-52 rounded-lg shadow hover:shadow-md cursor-pointer bg-white flex-shrink-0 flex flex-col"
-                onClick={() => navigate(`/restaurant/${rest.id}`)}
-              >
-                <button
-                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(rest.id);
-                  }}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${favorites[rest.id] ? "text-green-600" : "text-gray-400"}`}
-                    fill={favorites[rest.id] ? "currentColor" : "none"}
-                  />
-                </button>
-
-                <img
-                  src={
-                    rest.thumb
-                      ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb}`
-                      : "/placeholder.png"
-                  }
-                  alt={rest.name}
-                  className="w-full h-28 object-cover rounded-t-lg"
-                />
-                <div className="p-2 text-center flex flex-col">
-                  <h3 className="font-semibold text-gray-800 text-sm truncate">{rest.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1 overflow-hidden text-ellipsis line-clamp-2">
-                    {rest.description || "Delicious meals and great service."}
-                  </p>
-                </div>
-
-              </div>
-            ))}
+          <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-4">
+            {renderItems.map((rest) =>
+              rest.placeholder ? (
+                <PlaceholderCard key={rest.id} />
+              ) : (
+                <RestaurantCard key={rest.id} rest={rest} favorites={favorites} toggleFavorite={toggleFavorite} navigate={navigate} />
+              )
+            )}
           </div>
 
           <button
@@ -163,5 +100,49 @@ export default function FeaturedRestaurants() {
         </div>
       </div>
     </section>
+  );
+}
+
+// Placeholder card
+function PlaceholderCard() {
+  return (
+    <div className="relative w-52 rounded-lg shadow bg-gray-200 animate-pulse h-52 flex-shrink-0 cursor-pointer">
+      <div className="w-full h-28 rounded-t-lg bg-gray-300" />
+      <div className="p-2 flex flex-col justify-between h-24">
+        <div className="h-4 bg-gray-300 rounded w-3/4 mb-2" />
+        <div className="h-3 bg-gray-300 rounded w-full" />
+      </div>
+    </div>
+  );
+}
+
+// Actual restaurant card
+function RestaurantCard({ rest, favorites, toggleFavorite, navigate }) {
+  return (
+    <div
+      className="relative w-52 rounded-lg shadow hover:shadow-md cursor-pointer bg-white flex-shrink-0 flex flex-col"
+      onClick={() => navigate(`/restaurant/${rest.id}`)}
+    >
+      <button
+        className="absolute top-2 right-2 bg-white p-1 rounded-full shadow z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(rest.id);
+        }}
+      >
+        <Heart className={`w-5 h-5 ${favorites[rest.id] ? "text-green-600" : "text-gray-400"}`} fill={favorites[rest.id] ? "currentColor" : "none"} />
+      </button>
+      <img
+        src={rest.thumb ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb}` : "/placeholder.png"}
+        alt={rest.name}
+        className="w-full h-28 object-cover rounded-t-lg"
+      />
+      <div className="p-2 flex flex-col text-center">
+        <h3 className="font-semibold text-gray-800 text-sm truncate">{rest.name}</h3>
+        <p className="text-xs text-gray-500 mt-1 overflow-hidden text-ellipsis line-clamp-2">
+          {rest.description || "Delicious meals and great service."}
+        </p>
+      </div>
+    </div>
   );
 }
