@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react"; 
+import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { GET } from "../../api/httpMethods";
 import URLS from "../../api/urls";
 
 export default function FeaturedRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [favorites, setFavorites] = useState({});
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const scrollRef = useRef(null);
 
   // Fetch restaurants from API
@@ -63,11 +63,11 @@ export default function FeaturedRestaurants() {
       {/* Restaurants */}
       <div className="max-w-6xl mx-auto px-4 relative">
         {/* Mobile horizontal scroll */}
-        <div className="flex gap-4 overflow-x-auto sm:hidden scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto sm:hidden scrollbar-hide">
           {restaurants.map((rest) => (
             <div
               key={rest.id}
-              className="relative flex-shrink-0 w-56 rounded-lg shadow hover:shadow-lg cursor-pointer bg-white"
+              className="relative flex-shrink-0 w-48 rounded-lg shadow hover:shadow-md cursor-pointer bg-white"
               onClick={() => navigate(`/restaurant/${rest.id}`)}
             >
               <button
@@ -85,16 +85,16 @@ export default function FeaturedRestaurants() {
 
               <img
                 src={
-                  rest.image
-                    ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.image}`
+                  rest.thumb
+                    ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb}`
                     : "/placeholder.png"
                 }
                 alt={rest.name}
-                className="w-full h-36 object-cover rounded-t-lg"
+                className="w-full h-28 object-cover rounded-t-lg"
               />
-              <div className="p-3 text-center">
-                <h3 className="font-semibold text-gray-800">{rest.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">
+              <div className="p-2 text-center h-20 flex flex-col justify-between">
+                <h3 className="font-semibold text-gray-800 text-sm truncate">{rest.name}</h3>
+                <p className="text-xs text-gray-500 mt-1 overflow-hidden text-ellipsis line-clamp-2">
                   {rest.description || "Delicious meals and great service."}
                 </p>
               </div>
@@ -113,16 +113,16 @@ export default function FeaturedRestaurants() {
 
           <div
             ref={scrollRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide py-2 px-6"
+            className="flex gap-4 overflow-x-auto scrollbar-hide py-2 px-4"
           >
             {restaurants.map((rest) => (
               <div
                 key={rest.id}
-                className="relative min-w-[250px] rounded-lg shadow hover:shadow-lg cursor-pointer bg-white flex-shrink-0"
+                className="relative w-52 rounded-lg shadow hover:shadow-md cursor-pointer bg-white flex-shrink-0 flex flex-col"
                 onClick={() => navigate(`/restaurant/${rest.id}`)}
               >
                 <button
-                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow"
+                  className="absolute top-2 right-2 bg-white p-1 rounded-full shadow z-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFavorite(rest.id);
@@ -136,19 +136,20 @@ export default function FeaturedRestaurants() {
 
                 <img
                   src={
-                    rest.image
-                      ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.image}`
+                    rest.thumb
+                      ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb}`
                       : "/placeholder.png"
                   }
                   alt={rest.name}
-                  className="w-full h-36 object-cover rounded-t-lg"
+                  className="w-full h-28 object-cover rounded-t-lg"
                 />
-                <div className="p-3 text-center">
-                  <h3 className="font-semibold text-gray-800">{rest.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                <div className="p-2 text-center flex flex-col">
+                  <h3 className="font-semibold text-gray-800 text-sm truncate">{rest.name}</h3>
+                  <p className="text-xs text-gray-500 mt-1 overflow-hidden text-ellipsis line-clamp-2">
                     {rest.description || "Delicious meals and great service."}
                   </p>
                 </div>
+
               </div>
             ))}
           </div>
