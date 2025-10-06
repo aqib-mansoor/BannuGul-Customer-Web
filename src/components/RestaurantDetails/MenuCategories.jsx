@@ -34,10 +34,13 @@ export default function MenuCategories({ restaurantId }) {
 
     const fetchCategories = async () => {
       try {
-        const res = await GET(URLS.SHOW_RESTAURANT_CATEGORIES, { restaurant_id: restaurantId });
+        const res = await GET(URLS.SHOW_RESTAURANT_CATEGORIES, {
+          restaurant_id: restaurantId,
+        });
         if (!res.data.error && res.data.records) {
           setCategories(res.data.records);
-          if (res.data.records.length > 0) setActiveCategory(res.data.records[0].id);
+          if (res.data.records.length > 0)
+            setActiveCategory(res.data.records[0].id);
         }
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -62,10 +65,12 @@ export default function MenuCategories({ restaurantId }) {
     const lower = name.toLowerCase();
     if (lower.includes("pizza")) return <Pizza size={16} />;
     if (lower.includes("burger")) return <Beef size={16} />;
-    if (lower.includes("drink") || lower.includes("beverage")) return <Coffee size={16} />;
+    if (lower.includes("drink") || lower.includes("beverage"))
+      return <Coffee size={16} />;
     if (lower.includes("sandwich")) return <Sandwich size={16} />;
     if (lower.includes("salad")) return <Salad size={16} />;
-    if (lower.includes("dessert") || lower.includes("ice")) return <IceCream size={16} />;
+    if (lower.includes("dessert") || lower.includes("ice"))
+      return <IceCream size={16} />;
     if (lower.includes("chicken")) return <Drumstick size={16} />;
     return <Utensils size={16} />;
   };
@@ -94,7 +99,6 @@ export default function MenuCategories({ restaurantId }) {
     };
   };
 
-  // ✅ Add or increase quantity
   const handleAdd = async (product) => {
     setError("");
     try {
@@ -102,7 +106,6 @@ export default function MenuCategories({ restaurantId }) {
       const existingItem = cartItems.find((i) => i.product_id === product.id);
 
       if (!existingItem) {
-        // Add new item
         const res = await POST(
           URLS.ADD_TO_CART,
           {
@@ -127,7 +130,6 @@ export default function MenuCategories({ restaurantId }) {
           setError(res.data.message || "Failed to add item to cart.");
         }
       } else {
-        // Increase quantity
         const res = await POST(
           URLS.UPDATE_CART_ITEM,
           {
@@ -151,11 +153,12 @@ export default function MenuCategories({ restaurantId }) {
       }
     } catch (err) {
       console.error("Add to cart error:", err);
-      setError(err.response?.data?.message || err.message || "Something went wrong.");
+      setError(
+        err.response?.data?.message || err.message || "Something went wrong."
+      );
     }
   };
 
-  // ✅ Decrease quantity (no removeToCart API)
   const handleRemove = async (product) => {
     setError("");
     try {
@@ -174,45 +177,52 @@ export default function MenuCategories({ restaurantId }) {
         if (!res.data.error) {
           setCartItems(
             cartItems.map((i) =>
-              i.product_id === existingItem.product_id ? { ...i, quantity: newQuantity } : i
+              i.product_id === existingItem.product_id
+                ? { ...i, quantity: newQuantity }
+                : i
             )
           );
         } else {
           setError(res.data.message || "Failed to update cart item.");
         }
       }
-      // ⚠️ If newQuantity < 1 → we just stop at 1 (no remove API called)
     } catch (err) {
       console.error("Update cart error:", err);
-      setError(err.response?.data?.message || err.message || "Something went wrong.");
+      setError(
+        err.response?.data?.message || err.message || "Something went wrong."
+      );
     }
   };
 
   if (loading) return <p className="text-center py-10">Loading menu...</p>;
 
   return (
-    <div>
+    <div className="mt-0">
       {error && <p className="text-red-500 mb-2 text-center">{error}</p>}
 
-      {/* Tabs + Search */}
-      <div className="sticky top-[50vh] md:top-[45vh] z-30 bg-white border-b shadow-md">
-        <div className="flex flex-nowrap items-center gap-2 px-2 py-2 overflow-x-auto">
+      {/* ✅ Sticky Category Bar (below Hero sticky navbar) */}
+      <div className="sticky top-[64px] z-40 bg-white/80 backdrop-blur-md border-b shadow-sm">
+        <div className="flex flex-wrap justify-center items-center gap-2 px-2 py-3 overflow-x-auto">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => scrollToCategory(cat.id)}
-              className={`flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full transition-all duration-200
-                ${activeCategory === cat.id
-                  ? "bg-green-600 text-white shadow-md scale-105"
-                  : "bg-gray-100 text-gray-700 hover:bg-green-100 hover:scale-105"
+              className={`flex items-center gap-1 px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                ${
+                  activeCategory === cat.id
+                    ? "bg-green-600 text-white shadow-md scale-105"
+                    : "bg-gray-100 text-gray-700 hover:bg-green-100 hover:scale-105"
                 }`}
             >
               {getIcon(cat.name)}
-              <span className="truncate max-w-[70px]">{cat.name}</span>
+              <span className="truncate max-w-[90px] text-center">
+                {cat.name}
+              </span>
             </button>
           ))}
 
-          <div className="hidden md:flex items-center bg-green-50 rounded-full px-2 py-1 ml-auto w-full md:w-auto border border-green-300">
+          {/* Search Bar */}
+          <div className="hidden md:flex items-center bg-green-50 rounded-full px-2 py-1 ml-3 w-full md:w-auto border border-green-300">
             <Search size={16} className="text-green-500" />
             <input
               type="text"
@@ -225,8 +235,8 @@ export default function MenuCategories({ restaurantId }) {
         </div>
       </div>
 
-      {/* Categories + Products */}
-      <div className="p-2 md:p-6">
+      {/* ✅ Menu Categories & Products */}
+      <div className="p-3 md:p-6">
         {categories.map((category) => {
           const filteredProducts = filterProducts(category.products || []);
           if (filteredProducts.length === 0) return null;
@@ -235,9 +245,11 @@ export default function MenuCategories({ restaurantId }) {
             <div
               key={category.id}
               ref={(el) => (categoryRefs.current[category.id] = el)}
-              className="mb-8 scroll-mt-[50vh] md:scroll-mt-[45vh]"
+              className="mb-8 scroll-mt-[120px]"
             >
-              <h2 className="text-lg md:text-xl font-bold mb-3">{category.name}</h2>
+              <h2 className="text-lg md:text-xl font-bold mb-3 text-center">
+                {category.name}
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 {filteredProducts.map((product) => {
@@ -254,17 +266,23 @@ export default function MenuCategories({ restaurantId }) {
                       />
 
                       <div className="flex flex-col flex-1">
-                        <h3 className="text-sm md:text-base font-semibold">{product.name}</h3>
+                        <h3 className="text-sm md:text-base font-semibold">
+                          {product.name}
+                        </h3>
                         <p className="text-xs md:text-sm text-gray-500 line-clamp-2">
                           {product.product_description}
                         </p>
                         {product.size && (
-                          <p className="text-xs md:text-sm text-gray-600 mt-1">Size: {product.size}</p>
+                          <p className="text-xs md:text-sm text-gray-600 mt-1">
+                            Size: {product.size}
+                          </p>
                         )}
 
                         <div className="flex items-center justify-between mt-2">
                           <div>
-                            <span className="text-green-600 font-bold text-sm md:text-base">Rs. {product.price}</span>
+                            <span className="text-green-600 font-bold text-sm md:text-base">
+                              Rs. {product.price}
+                            </span>
                             {product.original_price > product.price && (
                               <span className="line-through text-gray-400 text-xs md:text-sm ml-2">
                                 Rs. {product.original_price}
@@ -272,7 +290,6 @@ export default function MenuCategories({ restaurantId }) {
                             )}
                           </div>
 
-                          {/* Quantity Selector */}
                           {quantity === 0 ? (
                             <button
                               onClick={() => handleAdd(product)}
@@ -289,7 +306,9 @@ export default function MenuCategories({ restaurantId }) {
                               >
                                 <Minus size={12} />
                               </button>
-                              <span className="text-green-600 font-medium text-sm md:text-base">{quantity}</span>
+                              <span className="text-green-600 font-medium text-sm md:text-base">
+                                {quantity}
+                              </span>
                               <button
                                 onClick={() => handleAdd(product)}
                                 className="p-1 md:p-1.5 hover:bg-green-200 rounded-full transition"

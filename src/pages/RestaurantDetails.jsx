@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Hero from "../components/RestaurantDetails/Hero";
 import MenuCategories from "../components/RestaurantDetails/MenuCategories";
-import Footer from "../components/Footer"
+import Footer from "../components/Footer";
 import { GET } from "../api/httpMethods";
 import URLS from "../api/urls";
-
-
 
 export default function RestaurantDetails() {
   const { id } = useParams();
@@ -36,8 +34,12 @@ export default function RestaurantDetails() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Hero restaurant={restaurant} />
-      <MenuCategories restaurantId={restaurant.id} />
+      {/* Equal margin for both sections */}
+      <div className="px-6 md:px-16 lg:px-24">
+        <Hero restaurant={restaurant} />
+        <MenuCategories restaurantId={restaurant.id} />
+      </div>
+
       <Footer />
     </div>
   );
