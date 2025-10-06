@@ -24,17 +24,17 @@ import "../styles/scrollbar.css";
 import Lottie from "lottie-react";
 import { GET, POST, DELETE } from "../api/httpMethods";
 import URLS from "../api/urls";
-import checkedDone from "../assets/lottie/checked-done.json"; 
+import checkedDone from "../assets/lottie/checked-done.json";
 
 
 export default function FloatingCart() {
   const { cartItems, setCartItems } = useCart();
   const { settings } = useContext(SettingsContext);
-  const { selectedAddress, setSelectedAddress } = useContext(AddressContext); 
+  const { selectedAddress, setSelectedAddress } = useContext(AddressContext);
   const navigate = useNavigate();
   const [showSummary, setShowSummary] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState("");
-  const [modalType, setModalType] = useState(null); 
+  const [modalType, setModalType] = useState(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [voucher, setVoucher] = useState("");
@@ -432,11 +432,15 @@ export default function FloatingCart() {
                 {/* CTA Buttons */}
                 <div className="mt-6 flex flex-col gap-3">
                   <button
-                    onClick={() => navigate("/orders")}
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate("/orders");
+                    }}
                     className="w-full border border-green-600 text-green-600 py-3 rounded-xl font-semibold hover:bg-green-50 transition"
                   >
                     View My Orders
                   </button>
+
                 </div>
               </div>
             </div>

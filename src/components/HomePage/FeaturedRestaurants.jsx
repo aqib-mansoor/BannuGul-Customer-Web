@@ -76,7 +76,7 @@ export default function FeaturedRestaurants() {
 
               <img
                 src={
-                  rest.image
+                  rest.thumb
                     ? `https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.image}`
                     : "/placeholder.png"
                 }
