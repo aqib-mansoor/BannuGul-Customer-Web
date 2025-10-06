@@ -12,7 +12,6 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState(ORDER_STATUS.ALL);
@@ -60,7 +59,8 @@ export default function Orders() {
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
-        setError("Failed to load orders");
+        setOrders([]);
+        setFilteredOrders([]);
       } finally {
         setLoading(false);
       }
@@ -117,6 +117,21 @@ export default function Orders() {
     setFilteredOrders(updatedOrders);
   };
 
+  // Placeholder count
+  const placeholderCount = 6;
+  const renderItems =
+    loading
+      ? Array.from({ length: placeholderCount }).map((_, index) => ({
+          placeholder: true,
+          id: index,
+        }))
+      : filteredOrders.length > 0
+      ? filteredOrders
+      : Array.from({ length: placeholderCount }).map((_, index) => ({
+          placeholder: true,
+          id: index,
+        }));
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <Navbar />
@@ -146,89 +161,19 @@ export default function Orders() {
 
       {/* Orders List */}
       <main className="flex-1 px-2 md:px-4 py-6">
-        {loading ? (
-          <p className="text-center mt-10 text-green-600">Loading orders...</p>
-        ) : error ? (
-          <p className="text-center text-red-500 mt-10">{error}</p>
-        ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-10">
-            <svg
-              className="h-12 w-12 text-gray-400 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M3 3h18l-2 13H5L3 3z" />
-            </svg>
-            <p className="text-gray-500 text-lg mb-2">No orders found</p>
-            <p className="text-gray-400 text-sm">Try changing the filters above</p>
-          </div>
-        ) : (
-          <div className="max-w-5xl mx-auto space-y-4">
-            {filteredOrders.map((order) => {
-              const itemsTotal = Number(order.total_price) || 0;
-              const deliveryCharge = Number(order.delivery_charges) || 0;
-              const finalTotal = itemsTotal + deliveryCharge;
-
-              return (
-                <div
-                  key={order.id}
-                  className="cursor-pointer border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white hover:bg-green-50 relative"
-                  onClick={() => openOrderDetails(order.id)}
-                >
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                      <img
-                        src={order.restaurant?.thumb || ""}
-                        alt={order.restaurant?.name || "Restaurant"}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-800 text-base md:text-lg">
-                          {order.restaurant?.name || "Restaurant"}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Ordered on:{" "}
-                          {order.date_time
-                            ? new Date(order.date_time).toLocaleString()
-                            : "N/A"}
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-center mt-3">
-                        <div className="text-sm text-gray-600">
-                          <p className="font-semibold text-green-600">
-                            Dhs {finalTotal}
-                          </p>
-                        </div>
-                        <span className="flex items-center gap-1 text-sm font-medium text-green-600 hover:underline">
-                          View Details
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <span
-                    className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
-                      order.status === ORDER_STATUS.DELIVERED
-                        ? "bg-green-100 text-green-700"
-                        : order.status === ORDER_STATUS.PENDING
-                        ? "bg-yellow-100 text-yellow-700"
-                        : order.status === ORDER_STATUS.CANCELLED
-                        ? "bg-red-100 text-red-700"
-                        : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="max-w-5xl mx-auto space-y-4">
+          {renderItems.map((order) =>
+            order.placeholder ? (
+              <OrderPlaceholder key={order.id} />
+            ) : (
+              <OrderCard
+                key={order.id}
+                order={order}
+                openOrderDetails={openOrderDetails}
+              />
+            )
+          )}
+        </div>
       </main>
 
       {selectedOrder && (
@@ -241,6 +186,86 @@ export default function Orders() {
       )}
 
       <Footer />
+    </div>
+  );
+}
+
+// Placeholder card
+function OrderPlaceholder() {
+  return (
+    <div className="border border-gray-200 rounded-xl p-5 shadow-sm animate-pulse bg-white h-36 flex gap-4">
+      <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0" />
+      <div className="flex-1 flex flex-col justify-between">
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+        </div>
+        <div className="flex justify-between items-center mt-3">
+          <div className="h-4 bg-gray-200 rounded w-1/4" />
+          <div className="h-4 bg-gray-200 rounded w-1/6" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Actual order card
+function OrderCard({ order, openOrderDetails }) {
+  const itemsTotal = Number(order.total_price) || 0;
+  const deliveryCharge = Number(order.delivery_charges) || 0;
+  const finalTotal = itemsTotal + deliveryCharge;
+
+  return (
+    <div
+      className="cursor-pointer border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition bg-white hover:bg-green-50 relative"
+      onClick={() => openOrderDetails(order.id)}
+    >
+      <div className="flex gap-4">
+        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+          <img
+            src={order.restaurant?.thumb || ""}
+            alt={order.restaurant?.name || "Restaurant"}
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <div className="flex-1 flex flex-col justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-800 text-base md:text-lg">
+              {order.restaurant?.name || "Restaurant"}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Ordered on:{" "}
+              {order.date_time
+                ? new Date(order.date_time).toLocaleString()
+                : "N/A"}
+            </p>
+          </div>
+          <div className="flex justify-between items-center mt-3">
+            <div className="text-sm text-gray-600">
+              <p className="font-semibold text-green-600">Dhs {finalTotal}</p>
+            </div>
+            <span className="flex items-center gap-1 text-sm font-medium text-green-600 hover:underline">
+              View Details
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Badge */}
+      <span
+        className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+          order.status === ORDER_STATUS.DELIVERED
+            ? "bg-green-100 text-green-700"
+            : order.status === ORDER_STATUS.PENDING
+            ? "bg-yellow-100 text-yellow-700"
+            : order.status === ORDER_STATUS.CANCELLED
+            ? "bg-red-100 text-red-700"
+            : "bg-blue-100 text-blue-700"
+        }`}
+      >
+        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+      </span>
     </div>
   );
 }
