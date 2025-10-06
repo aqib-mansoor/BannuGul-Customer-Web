@@ -11,8 +11,6 @@ import { useNavigate } from "react-router-dom";
 import { GET } from "../../api/httpMethods";
 import URLS from "../../api/urls";
 
-
-
 export default function NearbyRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [ratings, setRatings] = useState({});
@@ -26,36 +24,31 @@ export default function NearbyRestaurants() {
         const data = res.data?.records || [];
         setRestaurants(data);
 
-        // Fetch ratings for all restaurants
         const ratingsData = {};
         await Promise.all(
           data.map(async (rest) => {
             try {
               const ratingRes = await GET(URLS.SHOW_RESTAURANT_REVIEWS, { restaurant_id: rest.id });
-
               const restaurantInfo = ratingRes.data?.restaurant;
               ratingsData[rest.id] = restaurantInfo
                 ? {
-                  avgRating: restaurantInfo.average_rating,
-                  totalReviews: restaurantInfo.total_reviews,
-                }
+                    avgRating: restaurantInfo.average_rating,
+                    totalReviews: restaurantInfo.total_reviews,
+                  }
                 : { avgRating: 0, totalReviews: 0 };
             } catch {
               ratingsData[rest.id] = { avgRating: 0, totalReviews: 0 };
             }
           })
         );
-
         setRatings(ratingsData);
       } catch (err) {
         console.error("Error fetching nearby restaurants:", err);
       }
     };
-
     fetchRestaurants();
   }, []);
 
-  // ✅ Toggle favorite
   const toggleFavorite = (id) => {
     setFavorites((prev) => ({
       ...prev,
@@ -78,7 +71,6 @@ export default function NearbyRestaurants() {
 
   return (
     <section className="py-6 md:py-8 bg-green-50">
-      {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-6 px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
           Nearby Restaurants
@@ -88,16 +80,15 @@ export default function NearbyRestaurants() {
         </p>
       </div>
 
-      {/* Restaurant Cards */}
       <div className="max-w-6xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {restaurants.map((rest) => (
             <div
               key={rest.id}
               className="relative flex flex-col bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/restaurant/${rest.id}`)} // ✅ Go to details page
+              onClick={() => navigate(`/restaurant/${rest.id}`)}
             >
-              {/* Favorite Icon (stops propagation so only fav toggles, not navigation) */}
+              {/* Favorite Icon */}
               <button
                 className="absolute top-2 right-2 bg-white p-1 rounded-full shadow z-10"
                 onClick={(e) => {
@@ -114,20 +105,19 @@ export default function NearbyRestaurants() {
 
               {/* Image */}
               <img
-                src={`https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.image || "rest1.jpg"}`}
+                src={`https://bannugul.enscyd.com/bannugul-v2/public/images/restaurants/${rest.thumb || "rest1.jpg"}`}
                 alt={rest.name}
-                className="w-full h-40 object-cover"
+                className="w-full h-32 sm:h-36 object-cover"
               />
 
               {/* Details */}
-              <div className="p-3 flex flex-col gap-2">
+              <div className="p-3 flex flex-col gap-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-800 truncate">
                     {rest.name}
                   </h3>
                   <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs rounded-full">
-                    ⭐ {ratings[rest.id]?.avgRating || "0.0"} (
-                    {ratings[rest.id]?.totalReviews || 0})
+                    ⭐ {ratings[rest.id]?.avgRating || "0.0"} ({ratings[rest.id]?.totalReviews || 0})
                   </span>
                 </div>
 
@@ -137,19 +127,14 @@ export default function NearbyRestaurants() {
                   </p>
                 )}
 
-                {/* Badges */}
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-1 mt-2">
                   <span
                     className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${rest.status === 1
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                       }`}
                   >
-                    {rest.status === 1 ? (
-                      <CircleCheck size={12} />
-                    ) : (
-                      <CircleX size={12} />
-                    )}
+                    {rest.status === 1 ? <CircleCheck size={12} /> : <CircleX size={12} />}
                     {rest.status === 1 ? "Open" : "Closed"}
                   </span>
 
