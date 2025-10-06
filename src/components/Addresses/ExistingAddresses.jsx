@@ -68,9 +68,8 @@ export default function ExistingAddresses({
       {/* Alert */}
       {alertMessage && (
         <div
-          className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${
-            alertType === "success" ? "bg-green-600" : "bg-red-600"
-          }`}
+          className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${alertType === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
         >
           {alertMessage}
         </div>
@@ -98,10 +97,9 @@ export default function ExistingAddresses({
               <div
                 key={addr.id}
                 className={`flex items-start justify-between gap-3 p-4 rounded-xl border transition
-                  ${
-                    isSelected
-                      ? "border-green-600 bg-green-50"
-                      : "border-gray-200 hover:bg-green-100"
+                  ${isSelected
+                    ? "border-green-600 bg-green-50"
+                    : "border-gray-200 hover:bg-green-100"
                   }`}
               >
                 <label className="flex-1 flex items-start gap-3 cursor-pointer">
@@ -126,15 +124,15 @@ export default function ExistingAddresses({
                 </label>
 
                 {/* Trash icon for delete */}
-<button
-  onClick={(e) => {
-    e.stopPropagation(); // ✅ prevent radio selection
-    handleDelete(addr.id);
-  }}
-  className="text-gray-400 hover:text-red-600 transition"
->
-  <Trash2 size={20} />
-</button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // ✅ prevent radio selection
+                    handleDelete(addr.id);
+                  }}
+                  className="text-gray-400 hover:text-red-600 transition"
+                >
+                  <Trash2 size={20} />
+                </button>
               </div>
             );
           })

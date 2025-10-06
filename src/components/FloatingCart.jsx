@@ -370,18 +370,21 @@ export default function FloatingCart() {
               {/* ExistingAddresses Modal */}
               <AnimatePresence>
                 {modalType === "existing" && (
-                  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <ExistingAddresses
-                      onClose={() => setModalType(null)}
-                      savedAddresses={savedAddresses}
-                      selectedAddress={selectedAddress}
-                      setSelectedAddress={setSelectedAddress}
-                      setActiveAddress={setActiveAddressAPI}
-                      onAddNewAddress={() => setModalType("add")}
-                    />
+                  <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-start justify-center z-50 p-4 md:p-6">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md md:max-w-lg h-auto max-h-[90%] overflow-y-auto">
+                      <ExistingAddresses
+                        onClose={() => setModalType(null)}
+                        savedAddresses={savedAddresses}
+                        selectedAddress={selectedAddress}
+                        setSelectedAddress={setSelectedAddress}
+                        setActiveAddress={setActiveAddressAPI}
+                        onAddNewAddress={() => setModalType("add")}
+                      />
+                    </div>
                   </div>
                 )}
               </AnimatePresence>
+
             </div>
           )}
 
