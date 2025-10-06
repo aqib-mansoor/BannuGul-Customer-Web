@@ -1,4 +1,3 @@
-// src/components/RestaurantDetails/Hero.jsx
 import { useEffect, useState } from "react";
 import {
   Clock,
@@ -55,8 +54,8 @@ export default function Hero({ restaurant }) {
 
   return (
     <>
-      {/* Large Hero Section */}
-      <div className="relative w-full bg-white">
+      {/* Hero Section in a Card */}
+      <div className="mt-6 bg-white rounded-xl shadow-md sm:shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
@@ -88,8 +87,7 @@ export default function Hero({ restaurant }) {
               {restaurant.type}
             </p>
             <p className="text-gray-700 text-sm md:text-base mt-1">
-              ⭐ {reviewsInfo.average_rating} ({reviewsInfo.total_reviews}{" "}
-              reviews)
+              ⭐ {reviewsInfo.average_rating} ({reviewsInfo.total_reviews} reviews)
             </p>
 
             <div className="flex flex-wrap gap-2 mt-4">
@@ -101,11 +99,7 @@ export default function Hero({ restaurant }) {
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {restaurant.status === 1 ? (
-                  <CircleCheck size={14} />
-                ) : (
-                  <CircleX size={14} />
-                )}
+                {restaurant.status === 1 ? <CircleCheck size={14} /> : <CircleX size={14} />}
                 {restaurant.status === 1 ? "Open" : "Closed"}
               </span>
 
