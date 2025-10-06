@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import LogoutModal from "../components/Logout";
 import {
   User,
   Mail,
@@ -21,8 +22,7 @@ import {
   Settings,
 } from "lucide-react";
 import { POST } from "../api/httpMethods";
-import  URLS from "../api/urls";
-
+import URLS from "../api/urls";
 
 export default function Profile() {
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
@@ -35,6 +35,9 @@ export default function Profile() {
     phone: user.phone || "",
     profile_image: user.profile_image || "",
   });
+
+  // State for logout modal
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setFormData({
@@ -74,6 +77,11 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/";
   };
 
   const perks = [
@@ -175,7 +183,7 @@ export default function Profile() {
           </div>
 
           {/* Right Panel: Perks & General */}
-          <div className="md:w-2/3 p-6 sm:p-10 flex flex-col gap-6 overflow-visible">
+          <div className="md:w-2/3 p-6 sm:p-10 flex flex-col gap-6 overflow-visible relative">
 
             {/* Settings Icon Top Right */}
             <div className="absolute top-6 right-6 cursor-pointer">
@@ -200,7 +208,6 @@ export default function Profile() {
               </div>
             </div>
 
-
             {/* General Section */}
             <div>
               <h3 className="text-xl font-semibold text-gray-700 mb-4">General</h3>
@@ -216,7 +223,7 @@ export default function Profile() {
 
             {/* Logout Button */}
             <button
-              onClick={() => { localStorage.clear(); window.location.href = "/"; }}
+              onClick={() => setShowLogoutModal(true)}
               className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition w-max self-end mt-4"
             >
               Logout
@@ -228,6 +235,13 @@ export default function Profile() {
       </main>
 
       <Footer />
+
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onLogout={handleLogout}
+      />
     </div>
   );
 }
