@@ -4,7 +4,7 @@ import { User, HelpCircle } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { POST } from "../api/httpMethods";   // ✅ use httpMethods
-import  URLS  from "../api/urls";          // ✅ import urls
+import URLS from "../api/urls";             // ✅ import urls
 
 export default function Register() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function Register() {
   const showAlert = (message, type = "success") => {
     setAlertMessage(message);
     setAlertType(type);
-    setTimeout(() => setAlertMessage(""), 3000);
+    setTimeout(() => setAlertMessage(""), 5000); // ✅ 5 seconds
   };
 
   const handleImageChange = (e) => {
@@ -37,8 +37,32 @@ export default function Register() {
     }
   };
 
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 6; // Minimum 6 characters
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // ✅ Validation
+    if (!validateEmail(email)) {
+      showAlert("Please enter a valid email address.", "error");
+      return;
+    }
+    if (!validatePassword(password)) {
+      showAlert("Password must be at least 6 characters long.", "error");
+      return;
+    }
+    if (password !== passwordConfirmation) {
+      showAlert("Passwords do not match.", "error");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -51,7 +75,7 @@ export default function Register() {
       if (profileImage) formData.append("profile_image", profileImage);
 
       const res = await POST(URLS.REGISTER, formData, {
-        headers: { "Content-Type": "multipart/form-data" },  // ✅ pass headers
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (res.data && !res.data.error) {
@@ -188,7 +212,7 @@ export default function Register() {
 
             <button
               type="submit"
-              className="bg-green-600 text-white py-4 rounded-2xl hover:bg-green-700 transition font-semibold shadow-md"
+              className="bg-green-600 text-white py-3 rounded-2xl hover:bg-green-700 transition font-semibold shadow-md"
             >
               Sign Up
             </button>
