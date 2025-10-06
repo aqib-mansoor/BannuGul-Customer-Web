@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { GET } from "../../../api/httpMethods";
-import URLS  from "../../../api/urls";
+import URLS from "../../../api/urls";
 import { API_IMAGE_URL } from "../../../api/axios";
 import "./Categories.css";
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Number of placeholders to show while loading or if API returns few categories
+  const placeholderCount = 10;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -25,51 +28,43 @@ export default function Categories() {
     fetchCategories();
   }, []);
 
-  if (loading) {
-    return (
-      <section className="py-12 px-6 text-center bg-green-50">
-        <p className="text-gray-600">Loading categories...</p>
-      </section>
-    );
-  }
-
-  if (!categories.length) {
-    return (
-      <section className="py-12 px-6 text-center bg-green-50">
-        <p className="text-gray-600">No categories found.</p>
-      </section>
-    );
-  }
+  // Determine what to render: placeholders or actual categories
+  const renderItems = loading
+    ? Array.from({ length: placeholderCount }).map((_, index) => ({ placeholder: true, id: index }))
+    : [...categories, ...Array(Math.max(0, placeholderCount - categories.length)).fill(null).map((_, i) => ({ placeholder: true, id: i + categories.length }))];
 
   return (
     <section className="py-6 px-4 bg-green-50">
       <div className="max-w-6xl mx-auto overflow-hidden">
         <div className="flex gap-6 overflow-x-auto scrollbar-hide py-2">
-          {categories.map((cat) => {
-            const imageUrl = `${API_IMAGE_URL}${cat.image}`;
-            console.log("Image URL for:", cat.name, " => ", imageUrl);
-
-            return (
+          {renderItems.map((item) =>
+            item.placeholder ? (
               <div
-                key={cat.id}
+                key={item.id}
+                className="flex-shrink-0 w-28 flex flex-col items-center animate-pulse"
+              >
+                <div className="w-24 h-24 rounded-full border-2 border-green-600 overflow-hidden flex items-center justify-center bg-gray-300 shadow" />
+                <span className="mt-2 h-4 w-16 bg-gray-300 rounded" />
+              </div>
+            ) : (
+              <div
+                key={item.id}
                 className="flex-shrink-0 w-28 flex flex-col items-center cursor-pointer transition transform hover:scale-105"
               >
-                {/* Circle image */}
                 <div className="w-24 h-24 rounded-full border-2 border-green-600 overflow-hidden flex items-center justify-center bg-white shadow">
                   <img
-                    src={imageUrl}
-                    alt={cat.name}
+                    src={`${API_IMAGE_URL}${item.image}`}
+                    alt={item.name}
                     className="w-20 h-20 object-cover rounded-full"
                     onError={(e) => (e.target.src = "/fallback.png")}
                   />
                 </div>
-                {/* Category name */}
                 <span className="mt-2 text-sm font-medium text-gray-800 text-center">
-                  {cat.name}
+                  {item.name}
                 </span>
               </div>
-            );
-          })}
+            )
+          )}
         </div>
       </div>
     </section>
