@@ -1,4 +1,3 @@
-// src/components/RestaurantDetails/MenuCategories.jsx
 import { useEffect, useState, useRef } from "react";
 import {
   Utensils,
@@ -24,11 +23,9 @@ export default function MenuCategories({ restaurantId }) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
-  const [error, setError] = useState("");
 
   const categoryRefs = useRef({});
   const { cartItems = [], setCartItems } = useCart();
-  const scrollRef = useRef(null);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -45,7 +42,6 @@ export default function MenuCategories({ restaurantId }) {
         }
       } catch (err) {
         console.error("Error fetching categories:", err);
-        setError("Failed to load menu categories.");
       } finally {
         setLoading(false);
       }
@@ -90,10 +86,7 @@ export default function MenuCategories({ restaurantId }) {
 
   const getAuthHeaders = () => {
     const userToken = JSON.parse(localStorage.getItem("user"))?.token;
-    if (!userToken) {
-      alert("Please login first.");
-      throw new Error("No auth token");
-    }
+    if (!userToken) throw new Error("No auth token");
     return {
       Authorization: `Bearer ${userToken}`,
       "Content-Type": "application/json",
@@ -101,7 +94,6 @@ export default function MenuCategories({ restaurantId }) {
   };
 
   const handleAdd = async (product) => {
-    setError("");
     try {
       const headers = getAuthHeaders();
       const existingItem = cartItems.find((i) => i.product_id === product.id);
@@ -109,59 +101,31 @@ export default function MenuCategories({ restaurantId }) {
       if (!existingItem) {
         const res = await POST(
           URLS.ADD_TO_CART,
-          {
-            restaurant_id: restaurantId,
-            product_id: product.id,
-            quantity: 1,
-            special_instructions: "",
-            addons: [],
-          },
+          { restaurant_id: restaurantId, product_id: product.id, quantity: 1, special_instructions: "", addons: [] },
           { headers }
         );
-
         if (!res.data.error) {
-          const newItem = {
-            product_id: product.id,
-            quantity: 1,
-            name: product.name,
-            price: product.price,
-          };
+          const newItem = { product_id: product.id, quantity: 1, name: product.name, price: product.price };
           setCartItems([...cartItems, newItem]);
-        } else {
-          setError(res.data.message || "Failed to add item to cart.");
         }
       } else {
         const res = await POST(
           URLS.UPDATE_CART_ITEM,
-          {
-            product_id: existingItem.product_id,
-            quantity: existingItem.quantity + 1,
-          },
+          { product_id: existingItem.product_id, quantity: existingItem.quantity + 1 },
           { headers }
         );
-
         if (!res.data.error) {
           setCartItems(
-            cartItems.map((i) =>
-              i.product_id === existingItem.product_id
-                ? { ...i, quantity: i.quantity + 1 }
-                : i
-            )
+            cartItems.map((i) => i.product_id === existingItem.product_id ? { ...i, quantity: i.quantity + 1 } : i)
           );
-        } else {
-          setError(res.data.message || "Failed to update cart item.");
         }
       }
     } catch (err) {
-      console.error("Add to cart error:", err);
-      setError(
-        err.response?.data?.message || err.message || "Something went wrong."
-      );
+      console.error("Cart error:", err);
     }
   };
 
   const handleRemove = async (product) => {
-    setError("");
     try {
       const headers = getAuthHeaders();
       const existingItem = cartItems.find((i) => i.product_id === product.id);
@@ -177,30 +141,45 @@ export default function MenuCategories({ restaurantId }) {
         );
         if (!res.data.error) {
           setCartItems(
-            cartItems.map((i) =>
-              i.product_id === existingItem.product_id
-                ? { ...i, quantity: newQuantity }
-                : i
-            )
+            cartItems.map((i) => i.product_id === existingItem.product_id ? { ...i, quantity: newQuantity } : i)
           );
-        } else {
-          setError(res.data.message || "Failed to update cart item.");
         }
       }
     } catch (err) {
-      console.error("Update cart error:", err);
-      setError(
-        err.response?.data?.message || err.message || "Something went wrong."
-      );
+      console.error("Cart update error:", err);
     }
   };
 
-  if (loading) return <p className="text-center py-10">Loading menu...</p>;
+  // Placeholder while loading or if no categories
+  if (loading || categories.length === 0) {
+    return (
+      <div className="mt-0 p-3 md:p-6 space-y-6">
+        {/* Placeholder for category buttons */}
+        <div className="flex gap-2 overflow-x-auto">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="w-24 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+          ))}
+        </div>
+
+        {/* Placeholder for products */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="border rounded-lg p-3 shadow-sm animate-pulse flex gap-3 items-center h-32">
+              <div className="w-20 h-20 bg-gray-300 rounded-md"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-0">
-      {error && <p className="text-red-500 mb-2 text-center">{error}</p>}
-
       {/* Categories - horizontal scroll */}
       <div className="overflow-x-auto scrollbar-hide py-3 px-2">
         <div className="flex gap-2 min-w-max md:justify-center md:flex-wrap">
@@ -232,7 +211,6 @@ export default function MenuCategories({ restaurantId }) {
           </div>
         </div>
       </div>
-
 
       {/* Menu Categories & Products */}
       <div className="p-3 md:p-6">

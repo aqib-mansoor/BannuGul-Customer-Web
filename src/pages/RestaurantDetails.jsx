@@ -29,18 +29,42 @@ export default function RestaurantDetails() {
     fetchRestaurant();
   }, [id]);
 
-  if (loading) return <p className="p-6 text-center">Loading...</p>;
-  if (!restaurant) return <p className="p-6 text-center">No restaurant found</p>;
+  // Placeholder while loading or if restaurant not found yet
+  if (loading || !restaurant) {
+    return (
+      <div className="bg-gray-50 min-h-screen px-6 md:px-16 lg:px-24 py-6 space-y-6">
+        <RestaurantPlaceholder />
+        <div className="space-y-4">
+          <MenuCategoryPlaceholder />
+          <MenuCategoryPlaceholder />
+          <MenuCategoryPlaceholder />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Equal margin for both sections */}
       <div className="px-6 md:px-16 lg:px-24">
         <Hero restaurant={restaurant} />
         <MenuCategories restaurantId={restaurant.id} />
       </div>
-
       <Footer />
     </div>
+  );
+}
+
+// Placeholder for Hero
+function RestaurantPlaceholder() {
+  return (
+    <div className="animate-pulse bg-gray-200 rounded-lg h-48 w-full mb-6"></div>
+  );
+}
+
+// Placeholder for Menu Categories
+function MenuCategoryPlaceholder() {
+  return (
+    <div className="animate-pulse bg-gray-200 rounded-lg h-32 w-full"></div>
   );
 }
