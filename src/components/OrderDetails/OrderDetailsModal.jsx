@@ -1,10 +1,11 @@
 // src/components/orderDetails/OrderDetailsModal.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Lottie from "lottie-react";
 import { Store, Calendar, Hash, Phone, X } from "lucide-react";
 import "../../styles/scrollbar.css";
 import { POST, getAuthHeaders } from "../../api/httpMethods";
 import URLS from "../../api/urls";
+import { SettingsContext } from "../../context/SettingsContext"; // ✅ Import settings context
 
 import {
   STATUS_STEPS,
@@ -22,15 +23,16 @@ export default function OrderDetailsModal({
   selectedOrder,
   closeModal,
   detailsLoading,
-  onCancel, // ✅ updated prop name
+  onCancel,
 }) {
   const [cancelReason, setCancelReason] = useState("");
   const [customReason, setCustomReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [showCancelField, setShowCancelField] = useState(false);
-
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
+
+  const { settings } = useContext(SettingsContext); // ✅ Access delivery fee from settings
 
   const showAlert = (message, type = "success") => {
     setAlertMessage(message);
@@ -100,13 +102,14 @@ export default function OrderDetailsModal({
 
   const lottieAnimation = getLottieAnimation();
 
+  // ✅ Use delivery fee from order or fallback to showSettings
   const deliveryFee =
     selectedOrder.order_summary.delivery_charges ||
     selectedOrder.delivery_charges ||
-    0;
+    parseFloat(settings?.delivery_fee || settings?.delivery_charges || 0);
 
   const subTotal = selectedOrder.order_summary.total_price - deliveryFee;
-  const grandTotal = selectedOrder.order_summary.total_price;
+  const grandTotal = subTotal + deliveryFee;
 
   const cancelReasons = [
     "Ordered by mistake",
@@ -118,13 +121,13 @@ export default function OrderDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md h-auto max-h-[85vh] flex flex-col relative">
+      <div className="bg-gradient-to-br from-green-50 via-white to-green-100 rounded-2xl shadow-2xl w-full max-w-md h-auto max-h-[85vh] flex flex-col relative animate-fadeIn">
         {/* Header */}
-        <div className="flex justify-between items-center border-b px-4 py-3">
-          <h2 className="text-lg font-semibold text-green-600">Order Details</h2>
+        <div className="flex justify-between items-center border-b px-4 py-3 bg-green-600 text-white rounded-t-2xl">
+          <h2 className="text-lg font-semibold">Order Details</h2>
           <button
             onClick={closeModal}
-            className="text-gray-500 hover:text-gray-800 text-xl"
+            className="text-white hover:text-gray-200 transition"
           >
             <X size={22} />
           </button>
@@ -132,7 +135,7 @@ export default function OrderDetailsModal({
 
         {alertMessage && (
           <div
-            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white ${
+            className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg font-semibold text-white shadow-lg ${
               alertType === "success" ? "bg-green-600" : "bg-red-600"
             }`}
           >
@@ -253,24 +256,34 @@ export default function OrderDetailsModal({
               )}
 
               {/* Order Summary */}
-              <div className="border rounded-lg p-3 mb-4">
+              <div className="border rounded-xl p-4 mb-4 bg-white/80 backdrop-blur-sm shadow-sm">
                 <h3 className="text-md font-semibold text-green-600 mb-2">
                   Order Summary
                 </h3>
                 <ul className="divide-y divide-gray-200 mb-3">
                   {selectedOrder.order_items.map((item) => (
-                    <li
-                      key={item.id}
-                      className="py-1 flex justify-between text-xs items-center"
-                    >
-                      <span>
-                        {item.product.name}{" "}
-                        {item.size && `(${item.size})`} × {item.quantity}
-                      </span>
-                      <span className="text-green-600">Rs. {item.price}</span>
+                    <li key={item.id} className="py-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-800">
+                          {item.product?.name || "Product"} × {item.quantity}
+                        </span>
+                        <span className="text-green-600 font-semibold">
+                          Rs. {item.price}
+                        </span>
+                      </div>
+
+                      {item.variation_details?.length > 0 && (
+                        <div className="mt-1 text-xs text-gray-600 pl-2 border-l border-gray-300">
+                          {item.variation_details
+                            .map((v) => v.variation_name)
+                            .join(", ")}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
+
+                {/* ✅ Subtotal + Delivery + Total */}
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
@@ -278,10 +291,14 @@ export default function OrderDetailsModal({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span className="font-medium">Rs. {deliveryFee}</span>
+                    <span className="font-medium">
+                      {deliveryFee > 0 ? `Rs. ${deliveryFee}` : "Free"}
+                    </span>
                   </div>
                   <div className="flex justify-between border-t pt-1 mt-1">
-                    <span className="font-semibold">Total</span>
+                    <span className="font-semibold text-gray-800">
+                      Total (Incl. Delivery)
+                    </span>
                     <span className="font-bold text-green-600">
                       Rs. {grandTotal}
                     </span>
