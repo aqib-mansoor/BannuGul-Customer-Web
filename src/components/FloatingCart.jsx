@@ -73,9 +73,19 @@ export default function FloatingCart() {
       try {
         const headers = getAuthHeaders();
         const res = await GET(URLS.SHOW_CART_PRODUCTS, { headers });
-        if (!res.data.error) setCartItems(res.data.records || []);
-      } catch (err) { console.error(err); }
+        if (!res.data.error) {
+          const cartData = res.data.records || [];
+
+          // ✅ include total_amount, total_items if needed
+          setCartItems(cartData);
+        } else {
+          setCartItems([]);
+        }
+      } catch (err) {
+        console.error("Error fetching cart:", err);
+      }
     };
+
 
     const fetchAddresses = async () => {
       try {
@@ -96,11 +106,13 @@ export default function FloatingCart() {
   }, [isOpen]);
 
   // Totals
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
+  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.total_item_price || 0), 0);
   const discount = voucher ? 50 : 0;
-  //const taxAmount = ((subtotal - discount + DELIVERY_CHARGE) * TAX_PERCENTAGE) / 100;
   const total = subtotal + DELIVERY_CHARGE - discount;
+
+  //const taxAmount = ((subtotal - discount + DELIVERY_CHARGE) * TAX_PERCENTAGE) / 100;
+
 
   const handleAdd = (item) => {
     setCartItems(prev =>
@@ -281,19 +293,20 @@ export default function FloatingCart() {
                           </span>
 
                           {/* ✅ Show selected variations (mobile-friendly) */}
-                          {item?.selected_variations?.length > 0 && (
-                            <div
-                              className="text-xs text-gray-500 mt-1 break-words sm:line-clamp-2"
-                              title={item.selected_variations.map((v) => v.variation_name).join(", ")}
+                          {item?.selected_variations?.map((v, i) => (
+                            <span
+                              key={`${item.cart_id || item.id || "item"}-${v.variation_id || "var"}-${i}`}
+                              className="text-xs text-gray-500"
                             >
-                              {item.selected_variations.map((v) => v.variation_name).join(", ")}
-                            </div>
-                          )}
-
+                              {v.variation_name}
+                              {i < item.selected_variations.length - 1 ? ", " : ""}
+                            </span>
+                          ))}
 
                           {/* ✅ Show combined price */}
                           <div className="text-sm text-gray-600 mt-1 font-semibold">
-                            {CURRENCY} {item?.total_item_price || item?.product?.price || 0}
+                            {CURRENCY} {item.total_item_price?.toFixed(0) || 0}
+
                           </div>
                         </div>
 
