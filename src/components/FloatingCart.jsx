@@ -279,10 +279,24 @@ export default function FloatingCart() {
                           <span className="font-medium text-gray-800">
                             {item?.product?.name || "Product"}
                           </span>
-                          <div className="text-sm text-gray-500">
-                            {CURRENCY} {item?.product?.price || 0}
+
+                          {/* ✅ Show selected variations (mobile-friendly) */}
+                          {item?.selected_variations?.length > 0 && (
+                            <div
+                              className="text-xs text-gray-500 mt-1 break-words sm:line-clamp-2"
+                              title={item.selected_variations.map((v) => v.variation_name).join(", ")}
+                            >
+                              {item.selected_variations.map((v) => v.variation_name).join(", ")}
+                            </div>
+                          )}
+
+
+                          {/* ✅ Show combined price */}
+                          <div className="text-sm text-gray-600 mt-1 font-semibold">
+                            {CURRENCY} {item?.total_item_price || item?.product?.price || 0}
                           </div>
                         </div>
+
                       </div>
 
                       <div className="flex items-center gap-2 bg-green-100 px-2 py-1 rounded-full">

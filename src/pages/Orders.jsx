@@ -155,21 +155,25 @@ export default function Orders() {
 
       {/* Orders List */}
       <main className="flex-1 px-2 md:px-4 py-6">
-        <div className="max-w-5xl mx-auto space-y-4">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
-            Array.from({ length: placeholderCount }).map((_, index) => (
-              <OrderPlaceholder key={index} />
-            ))
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: placeholderCount }).map((_, index) => (
+                <OrderPlaceholder key={index} />
+              ))}
+            </div>
           ) : filteredOrders.length === 0 ? (
             <EmptyOrdersState />
           ) : (
-            renderItems.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                openOrderDetails={openOrderDetails}
-              />
-            ))
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderItems.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  openOrderDetails={openOrderDetails}
+                />
+              ))}
+            </div>
           )}
         </div>
       </main>
@@ -179,7 +183,7 @@ export default function Orders() {
           selectedOrder={selectedOrder}
           closeModal={closeModal}
           detailsLoading={detailsLoading}
-          onCancel={handleCancelOrder} // ✅ fixed
+          onCancel={handleCancelOrder}
         />
       )}
 
