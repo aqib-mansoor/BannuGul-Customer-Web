@@ -11,11 +11,14 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LogoutModal from "./Logout";
+import FavoritesModal from "./FavoritesModal"; // ✅ Added import
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false); // ✅ Added state
+  const [favorites, setFavorites] = useState([]); // ✅ Added favorites state
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,6 +30,9 @@ export default function Navbar() {
       } else {
         setUser(null);
       }
+
+      const storedFavs = JSON.parse(localStorage.getItem("favorites")) || []; // ✅ load favorites
+      setFavorites(storedFavs);
     } catch (err) {
       console.error("Failed to parse user from localStorage", err);
       setUser(null);
@@ -112,10 +118,11 @@ export default function Navbar() {
               </>
             ) : (
               <>
+                {/* ❤️ Favorites */}
                 <Heart
                   size={22}
                   className="text-green-600 cursor-pointer hover:text-green-700"
-                  onClick={() => navigate("/favorites")}
+                  onClick={() => setIsFavoritesOpen(true)} // ✅ show modal
                 />
                 <User
                   size={22}
@@ -132,14 +139,22 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button + Icons */}
           <div className="md:hidden flex items-center gap-3">
             {user && (
-              <User
-                size={22}
-                className="text-green-600 cursor-pointer"
-                onClick={() => navigate("/profile")}
-              />
+              <>
+                {/* ❤️ Favorites on mobile */}
+                <Heart
+                  size={22}
+                  className="text-green-600 cursor-pointer hover:text-green-700"
+                  onClick={() => setIsFavoritesOpen(true)} // ✅ show modal
+                />
+                <User
+                  size={22}
+                  className="text-green-600 cursor-pointer hover:text-green-700"
+                  onClick={() => navigate("/profile")}
+                />
+              </>
             )}
             <button onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -171,7 +186,7 @@ export default function Navbar() {
               ))}
             </ul>
 
-            {/* Mobile Auth Buttons (✅ Updated) */}
+            {/* Mobile Auth Buttons */}
             <div className="flex flex-col items-center gap-3 p-4 border-t border-gray-200">
               {!user ? (
                 <>
@@ -215,6 +230,13 @@ export default function Navbar() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onLogout={handleLogout}
+      />
+
+      {/* ✅ Favorites Modal */}
+      <FavoritesModal
+        isOpen={isFavoritesOpen}
+        onClose={() => setIsFavoritesOpen(false)}
+        favorites={favorites}
       />
     </>
   );
