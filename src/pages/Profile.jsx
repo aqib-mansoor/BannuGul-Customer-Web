@@ -34,14 +34,13 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // ✅ Context data (business info)
   const { settingsData } = useContext(SettingsContext);
 
-  // ✅ Alert state
+
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
 
-  // ✅ Modals state
+
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showGeneralModal, setShowGeneralModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
