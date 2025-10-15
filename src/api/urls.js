@@ -8,6 +8,8 @@ const URLS = {
   LOGIN_EMAIL: "api/login",
   LOGIN_PHONE: "api/loginPhone",
   REGISTER: "api/register",
+  FORGOT_PASSWORD: "/api/forgotPassword",
+  RESET_PASSWORD: "/api/resetPassword",
   UPDATE_PROFILE: "/api/updateProfile",
 
   // 🍔 Restaurants & Products

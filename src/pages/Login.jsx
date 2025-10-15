@@ -4,6 +4,7 @@ import { User, HelpCircle } from "lucide-react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { POST } from "../api/httpMethods";
 import URLS from "../api/urls";
+import ForgotPasswordModal from "../components/ForgotPasswordModal"; // ✅ Added
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState("email");
@@ -13,6 +14,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotModal, setShowForgotModal] = useState(false); // ✅ Added
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -144,7 +146,7 @@ export default function Login() {
 
             <div className="text-right mb-3">
               <span
-                onClick={() => navigate("/forgot-password")}
+                onClick={() => setShowForgotModal(true)} // ✅ Open modal instead of navigate
                 className="text-green-600 text-sm cursor-pointer hover:underline"
               >
                 Forgot Password?
@@ -241,7 +243,7 @@ export default function Login() {
 
             <div className="text-right -mt-2">
               <span
-                onClick={() => navigate("/forgot-password")}
+                onClick={() => setShowForgotModal(true)} // ✅ Open modal
                 className="text-green-600 text-sm cursor-pointer hover:underline"
               >
                 Forgot Password?
@@ -268,6 +270,12 @@ export default function Login() {
           </p>
         </div>
       </div>
+
+      {/* ✅ Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+      />
     </div>
   );
 }
