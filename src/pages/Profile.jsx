@@ -1,24 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LogoutModal from "../components/Logout";
+import HelpCenterModal from "../components/profilemodal/HelpCenterModal";
+import GeneralModal from "../components/profilemodal/GeneralModal";
+import TermsModal from "../components/profilemodal/TermsModal";
+import PaymentModal from "../components/profilemodal/PaymentModal";
+import PrivacyPolicyModal from "../components/ProfileModal/PrivacyPolicyModal";
+import DeliveryInfoModal from "../components/ProfileModal/DeliveryInfoModal";
+
 import {
   Mail,
   Phone,
-  Heart,
   Info,
   BookOpen,
   FileText,
   CreditCard,
-  MapPin,
-  Key,
-  Settings,
+  Truck,
+  Shield,
   LogOut,
-  Package,
 } from "lucide-react";
+
 import { POST } from "../api/httpMethods";
 import URLS, { getUserImageUrl } from "../api/urls";
+import { SettingsContext } from "../context/SettingsContext"; // ✅ use context for business info
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -28,9 +34,20 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // ✅ Context data (business info)
+  const { settingsData } = useContext(SettingsContext);
+
   // ✅ Alert state
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
+
+  // ✅ Modals state
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showGeneralModal, setShowGeneralModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
 
   const showAlert = (message, type = "success") => {
     setAlertMessage(message);
@@ -96,19 +113,14 @@ export default function Profile() {
     window.location.href = "/";
   };
 
-  const essentials = [
-    { label: "Orders", icon: Package, path: "/orders" },
-    { label: "Addresses", icon: MapPin, path: "/addresses" },
-    { label: "Favorites", icon: Heart, path: "/favorites" },
-  ];
-
+  // ✅ General section with click handlers
   const general = [
-    { label: "Help Center", icon: Info },
-    { label: "Business", icon: BookOpen },
-    { label: "Terms & Policies", icon: FileText },
-    { label: "Payment Methods", icon: CreditCard },
-    { label: "Change Password", icon: Key },
-    { label: "Settings", icon: Settings },
+    { label: "Help Center", icon: Info, onClick: () => setShowHelpModal(true) },
+    { label: "Business", icon: BookOpen, onClick: () => setShowGeneralModal(true) },
+    { label: "Terms & Policies", icon: FileText, onClick: () => setShowTermsModal(true) },
+    { label: "Privacy Policy", icon: Shield, onClick: () => setShowPrivacyModal(true) },
+    { label: "Delivery Info", icon: Truck, onClick: () => setShowDeliveryModal(true) },
+    { label: "Payment Methods", icon: CreditCard, onClick: () => setShowPaymentModal(true) },
   ];
 
   return (
@@ -200,44 +212,32 @@ export default function Profile() {
             </button>
           </div>
 
-          {/* ✅ Essentials */}
-          <div className="p-6 md:p-10">
-            <h3 className="text-xl font-semibold text-gray-700 mb-5 text-center md:text-left">
-              Your Essentials
-            </h3>
-
-            {/* ✅ Horizontal scroll on mobile */}
-            <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto scrollbar-hide px-2 md:px-0 pb-2">
-              {essentials.map((item) => (
-                <div
-                  key={item.label}
-                  onClick={() => navigate(item.path)}
-                  className="min-w-[110px] md:min-w-0 flex-shrink-0 
-                    flex flex-col items-center justify-center
-                    bg-gradient-to-br from-green-50 to-green-100 
-                    hover:from-green-100 hover:to-green-200 
-                    rounded-2xl shadow-sm p-4 md:p-6 cursor-pointer 
-                    transition-all hover:shadow-md hover:scale-105 
-                    border border-green-200 text-center"
-                >
-                  <div className="bg-white p-3 rounded-full shadow-sm transition">
-                    <item.icon className="text-green-700 w-6 h-6 md:w-7 md:h-7" />
-                  </div>
-                  <span className="text-xs md:text-sm font-medium text-gray-700 mt-2">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+          {/* ✅ Business Info Section */}
+          {settingsData && (
+            <div className="px-8 py-5 border-b border-gray-100 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Business Information
+              </h3>
+              <p className="text-gray-600">
+                <strong>Email:</strong> {settingsData?.email || "N/A"}
+              </p>
+              <p className="text-gray-600">
+                <strong>Phone:</strong> {settingsData?.phone || "N/A"}
+              </p>
+              <p className="text-gray-600">
+                <strong>Address:</strong> {settingsData?.address || "N/A"}
+              </p>
             </div>
+          )}
 
-            {/* ✅ General Section */}
-            <h3 className="text-xl font-semibold text-gray-700 mt-12 mb-5">
-              General
-            </h3>
+          {/* ✅ General Section */}
+          <div className="p-6 md:p-10">
+            <h3 className="text-xl font-semibold text-gray-700 mb-5">General</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
               {general.map((item) => (
                 <div
                   key={item.label}
+                  onClick={item.onClick}
                   className="flex items-center gap-3 bg-blue-50 p-4 rounded-xl hover:shadow-md hover:scale-105 transition cursor-pointer"
                 >
                   <item.icon className="text-blue-600 w-5 h-5" />
@@ -252,6 +252,14 @@ export default function Profile() {
       </main>
 
       <Footer />
+
+      {/* ✅ Modals */}
+      <HelpCenterModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+      <GeneralModal isOpen={showGeneralModal} onClose={() => setShowGeneralModal(false)} />
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} />
+      <PrivacyPolicyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+      <DeliveryInfoModal isOpen={showDeliveryModal} onClose={() => setShowDeliveryModal(false)} />
 
       <LogoutModal
         isOpen={showLogoutModal}

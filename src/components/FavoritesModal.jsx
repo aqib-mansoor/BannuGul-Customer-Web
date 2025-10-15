@@ -71,10 +71,16 @@ export default function FavoritesModal({ isOpen, onClose }) {
     }
   };
 
-  // ✅ When modal closes, trigger re-fetch for other components
+  // ✅ When modal closes, refresh page or trigger event
   const handleClose = () => {
+    // Notify other components before closing
     window.dispatchEvent(new Event("favoriteUpdated"));
+
+    // Option 1: Smoothly trigger re-fetch in other components
     onClose();
+
+    // Option 2 (if you prefer full reload):
+    // window.location.reload();
   };
 
   if (!isOpen) return null;
