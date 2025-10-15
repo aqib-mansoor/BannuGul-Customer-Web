@@ -83,6 +83,12 @@ export default function OrderDetailsModal({
         { headers: getAuthHeaders() }
       );
 
+  const showAlert = (message, type = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setTimeout(() => setAlertMessage(""), 3000);
+  };
+
       if (!res.data.error) {
         showAlert("✅ Order cancelled successfully", "success");
         setTimeout(() => {

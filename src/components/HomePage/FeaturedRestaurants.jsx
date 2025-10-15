@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
-import { GET } from "../../api/httpMethods";
+import { GET, POST } from "../../api/httpMethods";
 import URLS, { getRestaurantImageUrl } from "../../api/urls";
 
 export default function FeaturedRestaurants() {
@@ -11,22 +11,55 @@ export default function FeaturedRestaurants() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // Fetch restaurants
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         const res = await GET(URLS.SHOW_RESTAURANTS);
-        setRestaurants(Array.isArray(res.data.records) ? res.data.records : []);
-        setLoading(false);
+        if (res?.data?.records) {
+          setRestaurants(res.data.records);
+          // Preload favorites if they exist
+          const favs = {};
+          res.data.records.forEach((r) => {
+            favs[r.id] = r.is_favorite === 1; // if your API provides this flag
+          });
+          setFavorites(favs);
+        }
       } catch (err) {
         console.error("Error fetching restaurants:", err);
-        setLoading(true);
+      } finally {
+        setLoading(false);
       }
     };
     fetchRestaurants();
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  // ✅ Toggle favorite (add/remove)
+  const toggleFavorite = async (id) => {
+    if (!user) {
+      alert("Please log in to manage favorites.");
+      return;
+    }
+
+    const isLiked = !favorites[id]; // toggle state
+    setFavorites((prev) => ({ ...prev, [id]: isLiked })); // Optimistic UI
+
+    try {
+      await POST(
+        URLS.ADD_FAVORITE,
+        {
+          restaurant_id: id,
+          islike: isLiked ? "1" : "0",
+        },
+        { Authorization: `Bearer ${user.token}` }
+      );
+    } catch (err) {
+      console.error("Error updating favorite:", err);
+      // Rollback UI if failed
+      setFavorites((prev) => ({ ...prev, [id]: !isLiked }));
+    }
   };
 
   const scrollLeft = () => {
@@ -53,7 +86,7 @@ export default function FeaturedRestaurants() {
       }));
 
   return (
-    <section className="py-6 md:py-8 bg-green-50">
+    <section className="py-6 md:py-8 bg-gradient-to-br from-green-50 to-green-100 animate-gradient">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-6 px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
@@ -140,15 +173,12 @@ function PlaceholderCard() {
 function RestaurantCard({ rest, favorites, toggleFavorite, navigate }) {
   return (
     <div
-      className="relative w-52 rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-white flex-shrink-0 flex flex-col"
+      className="relative w-52 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white/90 backdrop-blur-sm flex-shrink-0 flex flex-col"
       onClick={() => navigate(`/restaurant/${rest.id}`)}
     >
-      {/* Gradient overlay for better visibility */}
-      <div className="absolute top-0 left-0 w-full h-28 bg-gradient-to-b from-black/10 to-transparent rounded-t-xl z-0" />
-
       {/* ❤️ Favorite */}
       <button
-        className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow z-10 hover:scale-110 transition-transform"
+        className="absolute top-2 right-2 bg-white/90 backdrop-blur-md p-1.5 rounded-full shadow z-10 hover:scale-110 transition-transform"
         onClick={(e) => {
           e.stopPropagation();
           toggleFavorite(rest.id);
@@ -167,7 +197,7 @@ function RestaurantCard({ rest, favorites, toggleFavorite, navigate }) {
         <img
           src={getRestaurantImageUrl(rest.thumb)}
           alt={rest.name}
-          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
         />
       </div>
 

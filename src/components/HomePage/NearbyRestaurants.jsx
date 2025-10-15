@@ -10,7 +10,7 @@ import {
   Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { GET } from "../../api/httpMethods";
+import { GET, POST } from "../../api/httpMethods";
 import URLS, { getRestaurantImageUrl } from "../../api/urls";
 
 export default function NearbyRestaurants() {
@@ -20,6 +20,7 @@ export default function NearbyRestaurants() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // 🟢 Fetch restaurants
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
@@ -27,6 +28,7 @@ export default function NearbyRestaurants() {
         const data = res.data?.records || [];
         setRestaurants(data);
 
+        // Fetch ratings for each restaurant
         const ratingsData = {};
         await Promise.all(
           data.map(async (rest) => {
@@ -56,11 +58,24 @@ export default function NearbyRestaurants() {
     fetchRestaurants();
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  // 💚 Toggle favorite with API call
+  const toggleFavorite = async (id) => {
+    const isLiked = !favorites[id]; // next state
+    setFavorites((prev) => ({ ...prev, [id]: isLiked })); // Optimistic UI update
+
+    try {
+      await POST(URLS.ADD_FAVORITE, {
+        restaurant_id: id,
+        islike: isLiked ? "1" : "0",
+      });
+      console.log(
+        `✅ ${isLiked ? "Added" : "Removed"} restaurant ${id} to favorites`
+      );
+    } catch (err) {
+      console.error("❌ Error updating favorite:", err);
+      // rollback if failed
+      setFavorites((prev) => ({ ...prev, [id]: !isLiked }));
+    }
   };
 
   const placeholderCount = 6;
@@ -77,7 +92,7 @@ export default function NearbyRestaurants() {
       }));
 
   return (
-    <section className="py-8 bg-green-50">
+    <section className="py-8 bg-gradient-to-br from-green-50 via-white to-green-100 animate-gradient">
       <div className="text-center max-w-3xl mx-auto mb-8 px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
           Nearby Restaurants
@@ -147,10 +162,10 @@ function RestaurantCard({ rest, favorites, toggleFavorite, ratings, navigate }) 
 
   return (
     <div
-      className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className="group relative bg-white/90 rounded-xl overflow-hidden shadow-md hover:shadow-xl backdrop-blur-sm border border-gray-100 hover:border-green-200 transition-all duration-300 cursor-pointer"
       onClick={() => navigate(`/restaurant/${rest.id}`)}
     >
-      {/* 🔖 Tag - only if one qualifies */}
+      {/* 🔖 Tag */}
       {tagLabel && (
         <div
           className={`absolute top-3 left-3 ${tagColor} text-white text-[11px] font-medium px-2 py-1 rounded-full flex items-center gap-1 shadow-md z-10`}
@@ -159,7 +174,7 @@ function RestaurantCard({ rest, favorites, toggleFavorite, ratings, navigate }) 
         </div>
       )}
 
-      {/* ❤️ Favorite button */}
+      {/* ❤️ Favorite */}
       <button
         className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-1.5 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
         onClick={(e) => {
