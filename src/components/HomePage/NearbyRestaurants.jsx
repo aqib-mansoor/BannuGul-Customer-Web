@@ -55,22 +55,55 @@ export default function NearbyRestaurants() {
         setLoading(false);
       }
     };
+
     fetchRestaurants();
+  }, []);
+
+  // 💚 Fetch favorites
+  const fetchFavorites = async () => {
+    try {
+      const res = await GET(URLS.SHOW_FAVORITES);
+      const records = res.data?.records || [];
+      const favMap = {};
+      records.forEach((f) => {
+        if (f.restaurant?.id) favMap[f.restaurant.id] = true;
+      });
+      setFavorites(favMap);
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    }
+  };
+
+  // 🔁 Fetch favorites on mount + whenever favorites are updated globally
+  useEffect(() => {
+    fetchFavorites();
+
+    // 👂 Listen for global favorite updates (from modal, featured, etc.)
+    const handleFavoriteUpdate = () => {
+      fetchFavorites();
+    };
+
+    window.addEventListener("favoriteUpdated", handleFavoriteUpdate);
+    window.addEventListener("modalClosed", handleFavoriteUpdate); // ✅ sync on modal close
+    return () => {
+      window.removeEventListener("favoriteUpdated", handleFavoriteUpdate);
+      window.removeEventListener("modalClosed", handleFavoriteUpdate);
+    };
   }, []);
 
   // 💚 Toggle favorite with API call
   const toggleFavorite = async (id) => {
-    const isLiked = !favorites[id]; // next state
-    setFavorites((prev) => ({ ...prev, [id]: isLiked })); // Optimistic UI update
+    const isLiked = !favorites[id];
+    setFavorites((prev) => ({ ...prev, [id]: isLiked })); // Optimistic UI
 
     try {
       await POST(URLS.ADD_FAVORITE, {
         restaurant_id: id,
         islike: isLiked ? "1" : "0",
       });
-      console.log(
-        `✅ ${isLiked ? "Added" : "Removed"} restaurant ${id} to favorites`
-      );
+
+      // ✅ Notify other components (modal, featured)
+      window.dispatchEvent(new Event("favoriteUpdated"));
     } catch (err) {
       console.error("❌ Error updating favorite:", err);
       // rollback if failed

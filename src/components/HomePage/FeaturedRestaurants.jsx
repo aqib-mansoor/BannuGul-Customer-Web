@@ -13,27 +13,71 @@ export default function FeaturedRestaurants() {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Fetch restaurants
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const res = await GET(URLS.SHOW_RESTAURANTS);
-        if (res?.data?.records) {
-          setRestaurants(res.data.records);
-          // Preload favorites if they exist
-          const favs = {};
-          res.data.records.forEach((r) => {
-            favs[r.id] = r.is_favorite === 1; // if your API provides this flag
-          });
-          setFavorites(favs);
+  // ✅ Fetch restaurants + favorites
+  const fetchRestaurantsAndFavorites = async () => {
+    try {
+      const res = await GET(URLS.SHOW_RESTAURANTS);
+      if (res?.data?.records) {
+        setRestaurants(res.data.records);
+
+        // Default favs map
+        const favs = {};
+        res.data.records.forEach((r) => {
+          favs[r.id] = r.is_favorite === 1;
+        });
+
+        // ✅ Fetch user's favorites (with auth header)
+        if (user?.token) {
+          const favRes = await GET(
+            URLS.SHOW_FAVORITES,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (Array.isArray(favRes.data?.records)) {
+            favRes.data.records.forEach((f) => {
+              if (f.restaurant?.id) favs[f.restaurant.id] = true;
+            });
+          }
         }
-      } catch (err) {
-        console.error("Error fetching restaurants:", err);
-      } finally {
-        setLoading(false);
+
+        setFavorites(favs);
       }
+    } catch (err) {
+      console.error("Error fetching restaurants:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Initial fetch
+  useEffect(() => {
+    fetchRestaurantsAndFavorites();
+  }, []);
+
+  // ✅ Re-fetch when global favorite update event is fired
+  useEffect(() => {
+    const handleFavoriteChange = () => {
+      fetchRestaurantsAndFavorites();
     };
-    fetchRestaurants();
+
+    window.addEventListener("favoriteUpdated", handleFavoriteChange);
+    return () =>
+      window.removeEventListener("favoriteUpdated", handleFavoriteChange);
+  }, []);
+
+  // ✅ Listen to cross-page favorite updates (e.g., from FavoritesModal)
+  useEffect(() => {
+    const syncFavorites = () => {
+      fetchRestaurantsAndFavorites();
+    };
+    window.addEventListener("favoritesSynced", syncFavorites);
+    return () => window.removeEventListener("favoritesSynced", syncFavorites);
   }, []);
 
   // ✅ Toggle favorite (add/remove)
@@ -43,7 +87,7 @@ export default function FeaturedRestaurants() {
       return;
     }
 
-    const isLiked = !favorites[id]; // toggle state
+    const isLiked = !favorites[id];
     setFavorites((prev) => ({ ...prev, [id]: isLiked })); // Optimistic UI
 
     try {
@@ -55,10 +99,13 @@ export default function FeaturedRestaurants() {
         },
         { Authorization: `Bearer ${user.token}` }
       );
+
+      // ✅ Notify global listeners (Featured, Nearby, Modal)
+      window.dispatchEvent(new Event("favoriteUpdated"));
+      window.dispatchEvent(new Event("favoritesSynced"));
     } catch (err) {
       console.error("Error updating favorite:", err);
-      // Rollback UI if failed
-      setFavorites((prev) => ({ ...prev, [id]: !isLiked }));
+      setFavorites((prev) => ({ ...prev, [id]: !isLiked })); // rollback
     }
   };
 

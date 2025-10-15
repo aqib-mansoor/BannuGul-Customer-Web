@@ -35,10 +35,11 @@ export default function FavoritesModal({ isOpen, onClose }) {
     }
   };
 
+  // ❤️ Toggle favourite (add/remove)
   const toggleFavorite = async (restaurantId, isLiked) => {
     setUpdating(restaurantId);
 
-    // optimistic update
+    // Optimistic UI update
     setFavorites((prev) =>
       isLiked
         ? prev.filter((f) => f.restaurant.id !== restaurantId)
@@ -57,13 +58,23 @@ export default function FavoritesModal({ isOpen, onClose }) {
         { restaurant_id: restaurantId, islike: isLiked ? "0" : "1" },
         { headers: getAuthHeaders() }
       );
+
       await fetchFavorites();
+
+      // ✅ Notify other components to refresh favorites
+      window.dispatchEvent(new Event("favoriteUpdated"));
     } catch (err) {
       console.error("❌ Error updating favorite:", err);
       fetchFavorites();
     } finally {
       setUpdating(null);
     }
+  };
+
+  // ✅ When modal closes, trigger re-fetch for other components
+  const handleClose = () => {
+    window.dispatchEvent(new Event("favoriteUpdated"));
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -78,7 +89,7 @@ export default function FavoritesModal({ isOpen, onClose }) {
             Favourite Restaurants
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-white hover:text-gray-200 transition"
           >
             <X size={24} />
@@ -93,7 +104,6 @@ export default function FavoritesModal({ isOpen, onClose }) {
             </p>
           ) : favorites.length === 0 ? (
             <div className="text-center py-10">
-              
               <p className="text-gray-600 font-medium">
                 You haven’t added any favourites yet.
               </p>
@@ -125,7 +135,7 @@ export default function FavoritesModal({ isOpen, onClose }) {
                       />
                     </div>
 
-                    {/* Favorite Heart */}
+                    {/* ❤️ Favorite Heart */}
                     <button
                       disabled={isUpdating}
                       onClick={(e) => {
@@ -167,7 +177,7 @@ export default function FavoritesModal({ isOpen, onClose }) {
         {/* Footer */}
         <div className="border-t border-gray-200 py-3 flex justify-center bg-white">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="px-8 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition font-medium shadow-md"
           >
             Close
