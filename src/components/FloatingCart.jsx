@@ -313,7 +313,7 @@ export default function FloatingCart() {
                   <ShoppingCart className="h-16 w-16 text-green-500 mb-3 opacity-80" />
                   <p className="text-lg font-medium">Your cart is empty</p>
                 </div>
-              ) : (
+              ) : ( 
                 <>
                   {cartItems.map((item) => (
                     <div

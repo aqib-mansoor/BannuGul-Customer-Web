@@ -213,9 +213,8 @@ function OrderPlaceholder() {
 
 // Actual order card
 function OrderCard({ order, openOrderDetails }) {
-  const itemsTotal = Number(order.total_price) || 0;
-  const deliveryCharge = Number(order.delivery_charges) || 0;
-  const finalTotal = itemsTotal + deliveryCharge;
+  const finalTotal = Number(order.total_price) || 0;
+
 
   return (
     <div
