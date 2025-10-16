@@ -24,7 +24,7 @@ import "../styles/scrollbar.css";
 import Lottie from "lottie-react";
 import { GET, POST, DELETE } from "../api/httpMethods";
 import URLS from "../api/urls";
-import { getProductImageUrl } from "../api/urls";
+import { getProductImageUrl, getRestaurantImageUrl } from "../api/urls";
 import checkedDone from "../assets/lottie/checked-done.json";
 
 
@@ -87,6 +87,7 @@ export default function FloatingCart() {
     };
 
 
+
     const fetchAddresses = async () => {
       try {
         const headers = getAuthHeaders();
@@ -107,63 +108,71 @@ export default function FloatingCart() {
 
   // Totals
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.total_item_price || 0), 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + (item.quantity * (item?.product?.price || 0)),
+    0
+  );
+
   const discount = voucher ? 50 : 0;
   const total = subtotal + DELIVERY_CHARGE - discount;
 
   //const taxAmount = ((subtotal - discount + DELIVERY_CHARGE) * TAX_PERCENTAGE) / 100;
-
-
-  const handleAdd = (item) => {
-    setCartItems(prev =>
-      prev.map(i =>
-        i.product_id === item.product_id ? { ...i, quantity: i.quantity + 1 } : i
-      )
-    );
-
-    const headers = getAuthHeaders();
-    POST(URLS.UPDATE_CART_ITEM, { product_id: item.product_id, quantity: item.quantity + 1 }, { headers })
-      .catch(err => {
-        console.error("Error updating quantity:", err);
-        setCartItems(prev =>
-          prev.map(i =>
-            i.product_id === item.product_id ? { ...i, quantity: item.quantity } : i
-          )
-        );
-      });
-  };
-
-  const handleRemove = (item) => {
-    const newQty = item.quantity - 1;
-    if (newQty <= 0) return handleRemoveItem(item.product_id);
-
-    setCartItems(prev =>
-      prev.map(i =>
-        i.product_id === item.product_id ? { ...i, quantity: newQty } : i
-      )
-    );
-
-    const headers = getAuthHeaders();
-    POST(URLS.UPDATE_CART_ITEM, { product_id: item.product_id, quantity: newQty }, { headers })
-      .catch(err => {
-        console.error("Error updating quantity:", err);
-        setCartItems(prev =>
-          prev.map(i =>
-            i.product_id === item.product_id ? { ...i, quantity: item.quantity } : i
-          )
-        );
-      });
-  };
-
-  const handleRemoveItem = async (productId) => {
+  // ✅ Increase quantity
+  const handleIncrease = async (item) => {
     try {
       const headers = getAuthHeaders();
-      await DELETE(URLS.REMOVE_TO_CART, { data: { product_id: productId }, headers });
-      setCartItems(cartItems.filter(i => i.product_id !== productId));
+      const cartId = item.cart_id || item.id; // fallback if one is missing
+
+      const body = { cart_id: cartId, quantity: item.quantity + 1 };
+      await POST(URLS.UPDATE_CART_ITEM, body, { headers });
+
+      setCartItems((prev) =>
+        prev.map((i) =>
+          i.cart_id === cartId || i.id === cartId
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        )
+      );
     } catch (err) {
-      console.error("Error removing item from cart:", err.response?.data || err.message);
+      console.error("❌ Error updating quantity:", err.response?.data || err.message);
     }
   };
+
+  // ✅ Decrease quantity
+  const handleDecrease = async (item) => {
+    try {
+      const headers = getAuthHeaders();
+      const cartId = item.cart_id || item.id;
+      const newQty = item.quantity - 1;
+
+      if (newQty <= 0) return handleRemoveItem(cartId);
+
+      const body = { cart_id: cartId, quantity: newQty };
+      await POST(URLS.UPDATE_CART_ITEM, body, { headers });
+
+      setCartItems((prev) =>
+        prev.map((i) =>
+          i.cart_id === cartId || i.id === cartId ? { ...i, quantity: newQty } : i
+        )
+      );
+    } catch (err) {
+      console.error("❌ Error decreasing quantity:", err.response?.data || err.message);
+    }
+  };
+
+
+  const handleRemoveItem = async (cartId) => {
+    try {
+      const headers = getAuthHeaders();
+      await DELETE(URLS.REMOVE_TO_CART, { data: { cart_id: cartId }, headers });
+      setCartItems((prev) => prev.filter((i) => i.id !== cartId));
+    } catch (err) {
+      console.error("Error removing item:", err.response?.data || err.message);
+    }
+  };
+
+
+
 
 
   const handleEmptyCart = async () => {
@@ -217,6 +226,38 @@ export default function FloatingCart() {
       <div className="flex justify-between font-bold text-lg"><span>Total</span><span className="text-green-600">{CURRENCY} {total.toFixed(2)}</span></div>
     </div>
   );
+
+  // helper: convert variations string (like "1,2,3,4") to human-friendly names
+  const getVariationNames = (item) => {
+    try {
+      if (!item) return "No variations";
+      // variations can be a comma-separated string like "1,2,3,4"
+      const variationStr = item.variations || "";
+      if (!variationStr) return "No variations";
+
+      const selectedIds = variationStr
+        .split(",")
+        .map((v) => parseInt(v, 10))
+        .filter(Boolean);
+
+      const names = [];
+
+      const groups = item?.product?.product_variation_groups || [];
+      groups.forEach((group) => {
+        (group.product_variations || []).forEach((variation) => {
+          if (selectedIds.includes(variation.id)) {
+            names.push(variation.name);
+          }
+        });
+      });
+
+      return names.length > 0 ? names.join(", ") : "No variations";
+    } catch (err) {
+      console.error("getVariationNames error:", err);
+      return "No variations";
+    }
+  };
+
 
   return (
     <>
@@ -274,8 +315,12 @@ export default function FloatingCart() {
                 </div>
               ) : (
                 <>
-                  {cartItems.map(item => (
-                    <div key={item.product_id} className="flex items-center justify-between p-3 mb-3 border rounded-lg shadow-sm hover:shadow-md transition">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.id || item.cart_id || item.product_id || Math.random()}
+                      className="flex items-center justify-between p-3 mb-3 border rounded-lg shadow-sm hover:shadow-md transition"
+                    >
+                      {/* Left side */}
                       <div className="flex items-center gap-3">
                         <img
                           src={
@@ -284,57 +329,51 @@ export default function FloatingCart() {
                               : "/placeholder.png"
                           }
                           alt={item?.product?.name || "Product"}
-                          className="w-14 h-14 object-cover rounded-lg border"
+                          className="w-16 h-16 rounded-lg object-cover border"
                           onError={(e) => (e.target.src = "/placeholder.png")}
                         />
+
                         <div>
-                          <span className="font-medium text-gray-800">
-                            {item?.product?.name || "Product"}
-                          </span>
-
-                          {/* ✅ Show selected variations (mobile-friendly) */}
-                          {item?.selected_variations?.map((v, i) => (
-                            <span
-                              key={`${item.cart_id || item.id || "item"}-${v.variation_id || "var"}-${i}`}
-                              className="text-xs text-gray-500"
-                            >
-                              {v.variation_name}
-                              {i < item.selected_variations.length - 1 ? ", " : ""}
-                            </span>
-                          ))}
-
-                          {/* ✅ Show combined price */}
-                          <div className="text-sm text-gray-600 mt-1 font-semibold">
-                            {CURRENCY} {item.total_item_price?.toFixed(0) || 0}
-
-                          </div>
+                          <h4 className="font-semibold text-gray-800">{item?.product?.name || "Unnamed Product"}
+                          </h4>
+                          {getVariationNames(item) !== "No variations" && (
+                            <p className="text-xs text-gray-500">
+                              Variations: {getVariationNames(item)}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-700">Rs {item?.product?.price}</p>
                         </div>
-
                       </div>
 
-                      <div className="flex items-center gap-2 bg-green-100 px-2 py-1 rounded-full">
+                      {/* Right side: quantity controls */}
+                      <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
                         <button
-                          onClick={() => handleRemove(item)}
-                          className="p-1 hover:bg-green-200 rounded-full"
+                          onClick={() => handleDecrease(item)}
+                          className="p-1 hover:bg-gray-200 rounded-full"
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="text-green-600 font-medium">{item.quantity}</span>
+
+                        <span className="text-gray-700 font-medium">{item.quantity}</span>
+
                         <button
-                          onClick={() => handleAdd(item)}
-                          className="p-1 hover:bg-green-200 rounded-full"
+                          onClick={() => handleIncrease(item)}
+                          className="p-1 hover:bg-gray-200 rounded-full"
                         >
                           <Plus size={14} />
                         </button>
+
                         <button
-                          onClick={() => handleRemoveItem(item.product_id)}
+                          onClick={() => handleRemoveItem(item.id)}
                           className="p-1 text-red-600 hover:bg-red-100 rounded-full"
                         >
                           <Trash2 size={16} />
                         </button>
+
                       </div>
                     </div>
                   ))}
+
 
                   <button
                     onClick={() => {

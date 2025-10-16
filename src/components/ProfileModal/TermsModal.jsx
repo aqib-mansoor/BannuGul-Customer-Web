@@ -25,7 +25,7 @@ export default function TermsModal({ isOpen, onClose }) {
         </ul>
 
         <p className="text-gray-600">
-          If you have any questions or concerns, please reach out to us at{" "}
+          If you have any questions or concerns, plzse reach out to us at{" "}
           <a
             href="mailto:support@bannugul.com"
             className="text-green-600 font-medium hover:underline"
