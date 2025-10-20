@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Hero from "../components/RestaurantDetails/Hero";
 import MenuCategories from "../components/RestaurantDetails/MenuCategories";
+import Reviews from "../components/RestaurantDetails/Reviews";
 import Footer from "../components/Footer";
 import { GET } from "../api/httpMethods";
 import URLS from "../api/urls";
@@ -48,6 +49,7 @@ export default function RestaurantDetails() {
     <div className="bg-gray-50 min-h-screen">
       <div className="px-6 md:px-16 lg:px-24">
         <Hero restaurant={restaurant} />
+        <Reviews restaurantId={restaurant.id} />
         <MenuCategories restaurantId={restaurant.id} />
       </div>
       <Footer />
