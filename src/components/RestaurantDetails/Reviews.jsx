@@ -27,7 +27,7 @@ export default function Reviews({ restaurantId }) {
     fetchReviews();
   }, [restaurantId]);
 
-  // Desktop drag-to-scroll
+  
   useEffect(() => {
     const slider = document.getElementById("reviews-slider");
     if (!slider) return;
