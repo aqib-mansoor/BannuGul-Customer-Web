@@ -1,7 +1,9 @@
+// src/pages/Orders.jsx
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import OrderDetailsModal from "../components/OrderDetails/OrderDetailsModal";
+import ReviewModal from "../components/ReviewModal";
 import "../styles/scrollbar.css";
 import { GET } from "../api/httpMethods";
 import URLS, { getRestaurantImageUrl } from "../api/urls";
@@ -18,6 +20,13 @@ export default function Orders() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState(null);
+
+  const [ratedOrders, setRatedOrders] = useState(
+    JSON.parse(localStorage.getItem("rated_orders") || "[]")
+  );
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -47,7 +56,14 @@ export default function Orders() {
               status = ORDER_STATUS.PENDING;
             }
 
-            return { ...o, status };
+            // ✅ FIX: Detect rated orders from backend + localStorage
+            const isRated =
+              ratedOrders.includes(o.id) ||
+              Boolean(o.is_rated) ||
+              Boolean(o.rating) ||
+              Boolean(o.review);
+
+            return { ...o, status, is_rated: isRated };
           });
 
           setOrders(mappedOrders);
@@ -64,10 +80,11 @@ export default function Orders() {
         setLoading(false);
       }
     };
-    fetchOrders();
-  }, []);
 
-  // Filter orders
+    fetchOrders();
+  }, []); // Prevent re-looping on ratedOrders
+
+  // Filter logic
   useEffect(() => {
     let filtered = [...orders];
     if (filterStatus !== ORDER_STATUS.ALL)
@@ -94,9 +111,7 @@ export default function Orders() {
   const openOrderDetails = async (id) => {
     try {
       setDetailsLoading(true);
-      const res = await GET(`${URLS.SHOW_ORDER_DETAILS}?order_id=${id}`, {
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      });
+      const res = await GET(`${URLS.SHOW_ORDER_DETAILS}?order_id=${id}`);
       if (res.data) setSelectedOrder(res.data);
     } catch (err) {
       console.error("Error fetching order details:", err);
@@ -115,22 +130,29 @@ export default function Orders() {
     setFilteredOrders(updatedOrders);
   };
 
-  const placeholderCount = 6;
+  // ✅ When review submitted successfully
+  const handleReviewSubmitted = (orderId) => {
+    const updatedRatedOrders = [...ratedOrders, orderId];
+    setRatedOrders(updatedRatedOrders);
+    localStorage.setItem("rated_orders", JSON.stringify(updatedRatedOrders));
+
+    const updatedOrders = orders.map((o) =>
+      o.id === orderId ? { ...o, is_rated: true } : o
+    );
+    setOrders(updatedOrders);
+    setFilteredOrders(updatedOrders);
+  };
+
   const renderItems =
-    loading
-      ? Array.from({ length: placeholderCount }).map((_, index) => ({
-          placeholder: true,
-          id: index,
-        }))
-      : filteredOrders.length > 0
-      ? filteredOrders
-      : [];
+    loading || filteredOrders.length === 0
+      ? Array.from({ length: 6 }).map((_, index) => ({ placeholder: true, id: index }))
+      : filteredOrders;
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <Navbar />
 
-      {/* Status Tabs */}
+      {/* Tabs */}
       <div className="sticky top-[70px] z-40 flex justify-center bg-gray-100 border-b border-gray-200 shadow-sm py-3">
         <div className="flex gap-3 overflow-x-auto px-4 scrollbar-none">
           {STATUS_TABS.map((tab) => {
@@ -153,13 +175,13 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* Orders List */}
+      {/* Orders */}
       <main className="flex-1 px-2 md:px-4 py-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Array.from({ length: placeholderCount }).map((_, index) => (
-                <OrderPlaceholder key={index} />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <OrderPlaceholder key={i} />
               ))}
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -171,6 +193,12 @@ export default function Orders() {
                   key={order.id}
                   order={order}
                   openOrderDetails={openOrderDetails}
+                  onReview={(o) => {
+                    if (!o.is_rated) {
+                      setReviewOrder(o);
+                      setReviewOpen(true);
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -178,6 +206,7 @@ export default function Orders() {
         </div>
       </main>
 
+      {/* Modals */}
       {selectedOrder && (
         <OrderDetailsModal
           selectedOrder={selectedOrder}
@@ -187,12 +216,21 @@ export default function Orders() {
         />
       )}
 
+      {reviewOpen && (
+        <ReviewModal
+          isOpen={reviewOpen}
+          onClose={() => setReviewOpen(false)}
+          orderId={reviewOrder?.id}
+          restaurant={reviewOrder?.restaurant}
+          onSubmitted={handleReviewSubmitted}
+        />
+      )}
+
       <Footer />
     </div>
   );
 }
 
-// Placeholder card
 function OrderPlaceholder() {
   return (
     <div className="border border-gray-200 rounded-xl p-5 shadow-sm animate-pulse bg-white h-36 flex gap-4">
@@ -202,19 +240,13 @@ function OrderPlaceholder() {
           <div className="h-4 bg-gray-200 rounded w-3/4" />
           <div className="h-3 bg-gray-200 rounded w-1/2" />
         </div>
-        <div className="flex justify-between items-center mt-3">
-          <div className="h-4 bg-gray-200 rounded w-1/4" />
-          <div className="h-4 bg-gray-200 rounded w-1/6" />
-        </div>
       </div>
     </div>
   );
 }
 
-// Actual order card
-function OrderCard({ order, openOrderDetails }) {
+function OrderCard({ order, openOrderDetails, onReview }) {
   const finalTotal = Number(order.total_price) || 0;
-
 
   return (
     <div
@@ -243,19 +275,38 @@ function OrderCard({ order, openOrderDetails }) {
             </p>
           </div>
           <div className="flex justify-between items-center mt-3">
-            <div className="text-sm text-gray-600">
-              <p className="font-semibold text-green-600">Dhs {finalTotal}</p>
-            </div>
-            <span className="flex items-center gap-1 text-sm font-medium text-green-600 hover:underline">
+            <p className="font-semibold text-green-600">Dhs {finalTotal}</p>
+            <span className="text-sm font-medium text-green-600 hover:underline">
               View Details
             </span>
           </div>
         </div>
       </div>
 
-      {/* Status Badge */}
+      {/* ⭐ Review Section */}
+      {order.status === ORDER_STATUS.DELIVERED && (
+        <div className="mt-3 text-right">
+          {!order.is_rated ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onReview(order);
+              }}
+              className="text-sm font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full hover:bg-emerald-100 transition-all duration-200"
+            >
+              Rate your meal
+            </button>
+          ) : (
+            <span className="text-sm font-semibold text-green-700 bg-green-100 border border-green-200 px-3 py-1 rounded-full">
+              ★ Rated
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Status badge */}
       <span
-        className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+        className={`absolute top-4 right-4 px-3 py-1 text-xs font-medium rounded-full ${
           order.status === ORDER_STATUS.DELIVERED
             ? "bg-green-100 text-green-700"
             : order.status === ORDER_STATUS.PENDING
@@ -271,7 +322,6 @@ function OrderCard({ order, openOrderDetails }) {
   );
 }
 
-// 🩵 Empty state when no orders
 function EmptyOrdersState() {
   return (
     <div className="flex flex-col items-center justify-center text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
