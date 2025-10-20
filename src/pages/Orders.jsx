@@ -8,7 +8,7 @@ import "../styles/scrollbar.css";
 import { GET } from "../api/httpMethods";
 import URLS, { getRestaurantImageUrl } from "../api/urls";
 import ORDER_STATUS, { STATUS_TABS } from "../constants/orderstatus";
-import { PackageOpen, ShoppingBag } from "lucide-react";
+import { PackageOpen, ShoppingBag, Star } from "lucide-react";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -283,26 +283,27 @@ function OrderCard({ order, openOrderDetails, onReview }) {
         </div>
       </div>
 
-      {/* ⭐ Review Section */}
-      {order.status === ORDER_STATUS.DELIVERED && (
-        <div className="mt-3 text-right">
-          {!order.is_rated ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onReview(order);
-              }}
-              className="text-sm font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full hover:bg-emerald-100 transition-all duration-200"
-            >
-              Rate your meal
-            </button>
-          ) : (
-            <span className="text-sm font-semibold text-green-700 bg-green-100 border border-green-200 px-3 py-1 rounded-full">
-              ★ Rated
-            </span>
-          )}
-        </div>
-      )}
+
+{order.status === ORDER_STATUS.DELIVERED && (
+  <div className="mt-2 text-right">
+    {!order.is_rated ? (
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          onReview(order);
+        }}
+        className="inline-flex items-center gap-1 text-[13px] text-orange-600 font-medium">
+        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+        Rate it
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-[13px] text-yellow-600 font-medium">
+        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+        Rated
+      </span>
+    )}
+  </div>
+)}
 
       {/* Status badge */}
       <span
