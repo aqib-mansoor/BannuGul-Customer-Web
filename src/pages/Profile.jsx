@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LogoutModal from "../components/Logout";
-import HelpCenterModal from "../components/profilemodal/HelpCenterModal";
-import GeneralModal from "../components/profilemodal/GeneralModal";
-import TermsModal from "../components/profilemodal/TermsModal";
-import PaymentModal from "../components/profilemodal/PaymentModal";
+import HelpCenterModal from "../components/ProfileModal/HelpCenterModal";
+import GeneralModal from "../components/ProfileModal/GeneralModal";
+import TermsModal from "../components/ProfileModal/TermsModal";
+import PaymentModal from "../components/ProfileModal/PaymentModal";
 import PrivacyPolicyModal from "../components/ProfileModal/PrivacyPolicyModal";
 import DeliveryInfoModal from "../components/ProfileModal/DeliveryInfoModal";
 
@@ -129,11 +129,10 @@ export default function Profile() {
       {/* ✅ Smooth Alert */}
       {alertMessage && (
         <div
-          className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-full shadow-md text-white font-medium transition-all ${
-            alertType === "success"
-              ? "bg-green-600 animate-bounce"
-              : "bg-red-600 animate-pulse"
-          }`}
+          className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-full shadow-md text-white font-medium transition-all ${alertType === "success"
+            ? "bg-green-600 animate-bounce"
+            : "bg-red-600 animate-pulse"
+            }`}
         >
           {alertMessage}
         </div>
