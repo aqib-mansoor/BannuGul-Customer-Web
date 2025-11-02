@@ -1,6 +1,6 @@
 // src/api/urls.js
 
-export const BASE_URL = "https://bannugul.enscyd.com/bannugul-v2/app";
+export const BASE_URL = "https://bannugul.me/admin";
 export const IMAGE_BASE_URL = `${BASE_URL}/media/images/`;
 
 const URLS = {
