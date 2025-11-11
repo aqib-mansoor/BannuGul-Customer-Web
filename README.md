@@ -28,8 +28,26 @@ A modern and responsive web application for BannuGul customers, built with **Rea
 
 ## ⚡ Getting Started
 
-### 1. Clone the repository
+### Clone the repository
 ```bash
 git clone https://github.com/aqib-mansoor/BannuGul-Customer-Web.git
 cd BannuGul-Customer-Web
 ```
+## Installation
+```bash
+pnpm install
+# or npm install
+```
+## Start the development server
+```bash
+pnpm run dev
+# or npm run dev
+```
+Open your browser at http://localhost:5173 to view the app.
+
+
+🌐 Live Demo
+
+Check out the live version of the project here:
+🔗 BannuGul Customer Web Demo
+
