@@ -33,24 +33,15 @@ A modern and responsive web application for BannuGul customers, built with **Rea
 git clone https://github.com/aqib-mansoor/BannuGul-Customer-Web.git
 cd BannuGul-Customer-Web
 
-2. Install dependencies
 pnpm install
 # or npm install
 
-3. Start the development server
 pnpm run dev
 # or npm run dev
 
-
-Open your browser at http://localhost:5173
- to view the app.
-
-📦 Build for Production
 pnpm run build
 # or npm run build
 
-
-This will generate optimized production files in the dist folder.
 
 🔧 Useful Commands
 Command	Description
@@ -60,11 +51,3 @@ pnpm run build	Build production-ready files
 git add .	Stage all changes for commit
 git commit -m ""	Commit changes with a message
 git push	Push local commits to GitHub
-
-
-🌐 Live Demo
-Check out the live version of the project here:
-🔗 BannuGul Customer Web Demo
-
-
-
