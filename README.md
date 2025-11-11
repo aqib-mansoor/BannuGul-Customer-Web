@@ -33,7 +33,7 @@ A modern and responsive web application for BannuGul customers, built with **Rea
 git clone https://github.com/aqib-mansoor/BannuGul-Customer-Web.git
 cd BannuGul-Customer-Web
 
-### 2. Install dependencies
-```bash
+2. Install dependencies
+```
 pnpm install
 # or npm install
