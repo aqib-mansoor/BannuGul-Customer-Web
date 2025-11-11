@@ -60,14 +60,11 @@ pnpm run build	Build production-ready files
 git add .	Stage all changes for commit
 git commit -m ""	Commit changes with a message
 git push	Push local commits to GitHub
-🌐 Live Demo
 
+
+🌐 Live Demo
 Check out the live version of the project here:
 🔗 BannuGul Customer Web Demo
 
-Replace with your actual deployed URL.
 
-👨‍💻 Author
 
-Aqib Mansoor
-GitHub Profile
