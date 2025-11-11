@@ -22,11 +22,12 @@ Follow these steps to run the project locally:
 ```bash
 git clone https://github.com/aqib-mansoor/BannuGul-Customer-Web.git
 cd BannuGul-Customer-Web
-2. Install dependencies
+
+### 2. Install dependencies
 pnpm install
 # or npm install
 
-3. Start the development server
+### 3. Start the development server
 pnpm run dev
 # or npm run dev
 
